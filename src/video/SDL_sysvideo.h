@@ -317,6 +317,9 @@ typedef struct VideoBootStrap {
 	SDL_VideoDevice *(*create)(int devindex);
 } VideoBootStrap;
 
+#if SDL_VIDEO_DRIVER_NACL
+extern VideoBootStrap NACL_bootstrap;
+#endif
 #if SDL_VIDEO_DRIVER_QUARTZ
 extern VideoBootStrap QZ_bootstrap;
 #endif

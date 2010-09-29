@@ -63,9 +63,13 @@
 #undef __IRIX__
 #define __IRIX__	1
 #endif
-#if defined(linux) || defined(__linux) || defined(__linux__)
+#if defined(linux) || defined(__linux) || defined(__linux__) && !defined(__native_client__)
 #undef __LINUX__
 #define __LINUX__	1
+#endif
+#if defined(__native_client__)
+#undef __NACL__
+#define __NACL__ 1
 #endif
 #if defined(__APPLE__)
 #undef __MACOSX__

@@ -72,9 +72,9 @@ int SDL_SemTryWait(SDL_sem *sem)
 		return -1;
 	}
 	retval = SDL_MUTEX_TIMEDOUT;
-	if ( sem_trywait(&sem->sem) == 0 ) {
-		retval = 0;
-	}
+	/* if ( sem_trywait(&sem->sem) == 0 ) { */
+	/* 	retval = 0; */
+	/* } */
 	return retval;
 }
 
@@ -128,12 +128,12 @@ int SDL_SemWaitTimeout(SDL_sem *sem, Uint32 timeout)
 Uint32 SDL_SemValue(SDL_sem *sem)
 {
 	int ret = 0;
-	if ( sem ) {
-		sem_getvalue(&sem->sem, &ret);
-		if ( ret < 0 ) {
-			ret = 0;
-		}
-	}
+	/* if ( sem ) { */
+	/* 	sem_getvalue(&sem->sem, &ret); */
+	/* 	if ( ret < 0 ) { */
+	/* 		ret = 0; */
+	/* 	} */
+	/* } */
 	return (Uint32)ret;
 }
 

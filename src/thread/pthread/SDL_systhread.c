@@ -82,11 +82,11 @@ void SDL_SYS_SetupThread(void)
 	sigset_t mask;
 
 	/* Mask asynchronous signals for this thread */
-	sigemptyset(&mask);
-	for ( i=0; sig_list[i]; ++i ) {
-		sigaddset(&mask, sig_list[i]);
-	}
-	pthread_sigmask(SIG_BLOCK, &mask, 0);
+	/* sigemptyset(&mask); */
+	/* for ( i=0; sig_list[i]; ++i ) { */
+	/* 	sigaddset(&mask, sig_list[i]); */
+	/* } */
+	/* pthread_sigmask(SIG_BLOCK, &mask, 0); */
 
 #ifdef PTHREAD_CANCEL_ASYNCHRONOUS
 	/* Allow ourselves to be asynchronously cancelled */

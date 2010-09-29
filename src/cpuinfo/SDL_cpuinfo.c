@@ -365,6 +365,8 @@ static Uint32 SDL_CPUFeatures = 0xFFFFFFFF;
 
 static Uint32 SDL_GetCPUFeatures(void)
 {
+	return SDL_CPUFeatures = 0;
+	// NaCl does not like the assembly in the CPU_have*.
 	if ( SDL_CPUFeatures == 0xFFFFFFFF ) {
 		SDL_CPUFeatures = 0;
 		if ( CPU_haveRDTSC() ) {

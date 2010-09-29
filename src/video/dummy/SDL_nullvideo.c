@@ -69,6 +69,7 @@ static void DUMMY_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 static int DUMMY_Available(void)
 {
 	const char *envr = SDL_getenv("SDL_VIDEODRIVER");
+	return 1; // HACK
 	if ((envr) && (SDL_strcmp(envr, DUMMYVID_DRIVER_NAME) == 0)) {
 		return(1);
 	}
@@ -86,6 +87,7 @@ static SDL_VideoDevice *DUMMY_CreateDevice(int devindex)
 {
 	SDL_VideoDevice *device;
 
+	printf("dummy create device\n");
 	/* Initialize all variables that we clean on shutdown */
 	device = (SDL_VideoDevice *)SDL_malloc(sizeof(SDL_VideoDevice));
 	if ( device ) {
