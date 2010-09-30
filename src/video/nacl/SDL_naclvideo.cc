@@ -33,6 +33,7 @@ extern "C" {
 
 #include "SDL_video.h"
 #include "SDL_mouse.h"
+#include "SDL_nacl.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
@@ -41,8 +42,8 @@ extern "C" {
 
 static NPP global_npp;
 
-void SDL_NACL_SetNPP(void* npp) {
-  global_npp = (NPP)npp;
+void SDL_NACL_SetNPP(NPP npp) {
+  global_npp = npp;
 }
 
 /* Initialization/Query functions */
@@ -67,6 +68,7 @@ static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 static int NACL_Available(void)
 {
 	const char *envr = SDL_getenv("SDL_VIDEODRIVER");
+	assert(global_npp);
 	printf("yes, nacl is available\n");
 	return 1; // HACK
 	if ((envr) && (SDL_strcmp(envr, NACLVID_DRIVER_NAME) == 0)) {
@@ -277,8 +279,8 @@ static void NACL_SetCaption(_THIS, const char* title, const char* icon) {
 }
 
 static void flip(_THIS) {
-  printf("flip: this %p\n", _this);
-  printf("flip: h %d w %d bpp %d\n", _this->hidden->h, _this->hidden->w, _this->hidden->bpp);
+  // printf("flip: this %p\n", _this);
+  // printf("flip: h %d w %d bpp %d\n", _this->hidden->h, _this->hidden->w, _this->hidden->bpp);
   assert(_this->hidden->bpp == 8);
   uint32_t* pixel_bits = static_cast<uint32_t*>(_this->hidden->context2d_.region);
   for (int y = 0; y < _this->hidden->h; ++y) {

@@ -37,9 +37,6 @@
 extern "C" {
 #endif
 
-void SDL_NACL_SetNPP(void* npp);
-
-
 /** @name Transparency definitions
  *  These define alpha as the opacity of a surface
  */

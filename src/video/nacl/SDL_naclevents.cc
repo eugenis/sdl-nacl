@@ -21,19 +21,92 @@
 */
 #include "SDL_config.h"
 
-/* Being a null driver, there's no event stream. We just define stubs for
-   most of the API. */
-
+extern "C" {
 #include "SDL.h"
+#include "SDL_nacl.h"
 #include "../../events/SDL_sysevents.h"
 #include "../../events/SDL_events_c.h"
+}
 
 #include "SDL_naclvideo.h"
 #include "SDL_naclevents_c.h"
+#include "eventqueue.h"
+
+static EventQueue event_queue;
+
+
+void SDL_NACL_PushEvent(NPPepperEvent* nppevent) {
+  switch (nppevent->type) {
+  case NPEventType_MouseDown:
+    printf("mouse down\n");
+    break;
+  case NPEventType_MouseUp:
+    printf("mouse up\n");
+    break;
+  case NPEventType_MouseMove:
+    printf("mouse move\n");
+    break;
+  case NPEventType_MouseEnter:
+    printf("mouse enter\n");
+    break;
+  case NPEventType_MouseLeave:
+    printf("mouse leave\n");
+    break;
+  case NPEventType_MouseWheel:
+    printf("mouse wheel\n");
+    break;
+  case NPEventType_RawKeyDown:
+  case NPEventType_KeyDown:
+  case NPEventType_KeyUp:
+    printf("key\n");
+    break;
+  case NPEventType_Char:
+    printf("char\n");
+    break;
+  case NPEventType_Minimize:
+    printf("minimize\n");
+    break;
+  case NPEventType_Focus:
+    printf("focus\n");
+    break;
+  case NPEventType_Device:
+    printf("device\n");
+    break;
+  default:
+    printf("unknown\n");
+  }
+
+  NPPepperEvent* copy = (NPPepperEvent*)malloc(sizeof(NPPepperEvent));
+  memcpy(copy, nppevent, sizeof(NPPepperEvent));
+  event_queue.PushEvent(copy);
+}
+
+static Uint8 translateButton(/*NPMouseButtons*/ int32_t button) {
+  switch (button) {
+  case NPMouseButton_Left:
+    return SDL_BUTTON_LEFT;
+  case NPMouseButton_Middle:
+    return SDL_BUTTON_MIDDLE;
+  case NPMouseButton_Right:
+    return SDL_BUTTON_RIGHT;
+  case NPMouseButton_None:
+  default:
+   return 0;
+  }
+}
+
 
 void NACL_PumpEvents(_THIS)
 {
-	/* do nothing. */
+  NPPepperEvent* event;
+  while (event = event_queue.PopEvent()) {
+    if (event->type == NPEventType_MouseDown) {
+      SDL_PrivateMouseButton(SDL_PRESSED, translateButton(event->u.mouse.button), 0, 0);
+    } else if (event->type == NPEventType_MouseUp) {
+      SDL_PrivateMouseButton(SDL_RELEASED, translateButton(event->u.mouse.button), 0, 0);
+    }
+    free(event);
+  }
 }
 
 void NACL_InitOSKeymap(_THIS)
