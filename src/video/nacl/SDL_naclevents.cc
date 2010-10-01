@@ -95,15 +95,51 @@ static Uint8 translateButton(/*NPMouseButtons*/ int32_t button) {
   }
 }
 
+static SDLKey translateKey(uint32_t code) {
+  printf("code: %u '%c'\n", code, code);
+  switch (code) {
+    case 'A':
+      return SDLK_a;
+    case 'S':
+      return SDLK_s;
+    case 'D':
+      return SDLK_d;
+    case 'W':
+      return SDLK_w;
+    case 37:
+      return SDLK_LEFT;
+    case 38:
+      return SDLK_UP;
+    case 39:
+      return SDLK_RIGHT;
+    case 40:
+      return SDLK_DOWN;
+    default:
+      return SDLK_UNKNOWN;
+  }
+}
 
 void NACL_PumpEvents(_THIS)
 {
   NPPepperEvent* event;
+  SDL_keysym keysym;
   while (event = event_queue.PopEvent()) {
     if (event->type == NPEventType_MouseDown) {
       SDL_PrivateMouseButton(SDL_PRESSED, translateButton(event->u.mouse.button), 0, 0);
     } else if (event->type == NPEventType_MouseUp) {
       SDL_PrivateMouseButton(SDL_RELEASED, translateButton(event->u.mouse.button), 0, 0);
+    } else if (event->type == NPEventType_KeyDown) {
+      keysym.scancode = 0;
+      keysym.sym = translateKey(event->u.key.normalizedKeyCode);
+      keysym.mod = KMOD_NONE;
+      keysym.unicode = 0;
+      SDL_PrivateKeyboard(SDL_PRESSED, &keysym);
+    } else if (event->type == NPEventType_KeyUp) {
+      keysym.scancode = 0;
+      keysym.sym = translateKey(event->u.key.normalizedKeyCode);
+      keysym.mod = KMOD_NONE;
+      keysym.unicode = 0;
+      SDL_PrivateKeyboard(SDL_RELEASED, &keysym);
     }
     free(event);
   }
@@ -115,4 +151,3 @@ void NACL_InitOSKeymap(_THIS)
 }
 
 /* end of SDL_naclevents.c ... */
-
