@@ -67,15 +67,14 @@ static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
 static int NACL_Available(void)
 {
-	const char *envr = SDL_getenv("SDL_VIDEODRIVER");
-	assert(global_npp);
-	printf("yes, nacl is available\n");
-	return 1; // HACK
-	if ((envr) && (SDL_strcmp(envr, NACLVID_DRIVER_NAME) == 0)) {
-		return(1);
-	}
-
-	return(0);
+  const char *envr = SDL_getenv("SDL_VIDEODRIVER");
+  // Available if NPP is set and SDL_VIDEODRIVER is either unset, empty, or "nacl".
+  if (global_npp &&
+      (!envr || !*envr || SDL_strcmp(envr, NACLVID_DRIVER_NAME) == 0)) {
+    printf("nacl video is available\n");
+    return 1;
+  }
+  return 0;
 }
 
 static void NACL_DeleteDevice(SDL_VideoDevice *device)
@@ -264,7 +263,6 @@ static void write_ppm(_THIS, char* fname) {
 //   NPError err, void* user_data) {
 // }
 
-
 static void flush(_THIS) {
   // NPDeviceFlushContextCallbackPtr callback =
   //   reinterpret_cast<NPDeviceFlushContextCallbackPtr>(&FlushCallback);
@@ -273,10 +271,6 @@ static void flush(_THIS) {
 }
 
 static void NACL_SetCaption(_THIS, const char* title, const char* icon) {
-  if (title && strcmp(title, "Dear SDL, this is your chance to flush the NPDevice context.") == 0) {
-    // Do what we are told.
-    flush(_this);
-  }
 }
 
 static void flip(_THIS) {
@@ -293,7 +287,7 @@ static void flip(_THIS) {
       pixel_bits[_this->hidden->w * y + x] = val;
     }
   }
-  // flush(_this);
+  NPN_PluginThreadAsyncCall(global_npp, (void (*)(void*))&flush, _this);
 }
 
 static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
