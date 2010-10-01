@@ -260,15 +260,16 @@ static void write_ppm(_THIS, char* fname) {
 
 // This is called by the brower when the 2D context has been flushed to the
 // browser window.
-void FlushCallback(NPP instance, NPDeviceContext* context,
-  NPError err, void* user_data) {
-}
+// static void FlushCallback(NPP instance, NPDeviceContext* context,
+//   NPError err, void* user_data) {
+// }
 
 
 static void flush(_THIS) {
-  NPDeviceFlushContextCallbackPtr callback =
-    reinterpret_cast<NPDeviceFlushContextCallbackPtr>(&FlushCallback);
-  _this->hidden->device2d_->flushContext(global_npp, &_this->hidden->context2d_, callback, NULL);
+  // NPDeviceFlushContextCallbackPtr callback =
+  //   reinterpret_cast<NPDeviceFlushContextCallbackPtr>(&FlushCallback);
+  // _this->hidden->device2d_->flushContext(global_npp, &_this->hidden->context2d_, callback, NULL);
+  _this->hidden->device2d_->flushContext(global_npp, &_this->hidden->context2d_, NULL, NULL);
 }
 
 static void NACL_SetCaption(_THIS, const char* title, const char* icon) {
