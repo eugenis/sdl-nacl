@@ -40,7 +40,7 @@ extern "C" {
 
 #define NACLVID_DRIVER_NAME "nacl"
 
-static NPP global_npp;
+NPP global_npp;
 
 void SDL_NACL_SetNPP(NPP npp) {
   global_npp = npp;

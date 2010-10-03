@@ -156,6 +156,9 @@ extern AudioBootStrap MINTAUDIO_STFA_bootstrap;
 extern AudioBootStrap MINTAUDIO_XBIOS_bootstrap;
 extern AudioBootStrap MINTAUDIO_DMA8_bootstrap;
 #endif
+#if SDL_AUDIO_DRIVER_NACL
+extern AudioBootStrap NACLAUD_bootstrap;
+#endif
 #if SDL_AUDIO_DRIVER_DISK
 extern AudioBootStrap DISKAUD_bootstrap;
 #endif

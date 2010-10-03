@@ -889,11 +889,19 @@ dnl Check for Native Client stuff
 CheckNativeClient()
 {
     AC_ARG_ENABLE(naclvideo,
-AC_HELP_STRING([--enable-naclvideo], [support the nacl video driver [[default=yes]]]),
+AC_HELP_STRING([--enable-naclvideo], [enable the nacl video driver [[default=yes]]]),
                   , enable_naclvideo=yes)
     if test x$enable_video = xyes -a x$enable_naclvideo = xyes; then
         AC_DEFINE(SDL_VIDEO_DRIVER_NACL)
         SOURCES="$SOURCES $srcdir/src/video/nacl/*.cc"
+    fi
+
+    AC_ARG_ENABLE(naclaudio,
+AC_HELP_STRING([--enable-naclaudio], [enable the nacl audio driver [[default=yes]]]),
+                  , enable_naclaudio=yes)
+    if test x$enable_audio = xyes -a x$enable_naclaudio = xyes; then
+        AC_DEFINE(SDL_AUDIO_DRIVER_NACL)
+        SOURCES="$SOURCES $srcdir/src/audio/nacl/*.cc"
     fi
 }
 
@@ -2299,6 +2307,7 @@ case "$host" in
     *-nacl)
         ARCH=nacl
 	CheckNativeClient
+        CheckDummyAudio
         CheckDummyVideo
         CheckInputEvents
         # Set up files for the timer library
