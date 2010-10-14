@@ -565,6 +565,7 @@ int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 			break;
 
 		default:
+		  printf("not creating an audio thread\n");
 			/* The audio is now playing */
 			break;
 	}
