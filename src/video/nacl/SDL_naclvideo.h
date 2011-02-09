@@ -26,12 +26,15 @@
 
 extern "C" {
 #include "../SDL_sysvideo.h"
+#include "SDL_mutex.h"
 }
 
-#include <nacl/nacl_imc.h>
-#include <nacl/nacl_npapi.h>
-#include <nacl/npapi_extensions.h>
-#include <nacl/npruntime.h>
+#include <ppapi/cpp/instance.h>
+#include <ppapi/cpp/graphics_2d.h>
+// #include <nacl/nacl_imc.h>
+// #include <nacl/nacl_npapi.h>
+// #include <nacl/npapi_extensions.h>
+// #include <nacl/npruntime.h>
 
 
 /* Hidden "this" pointer for the video functions */
@@ -41,14 +44,16 @@ extern "C" {
 /* Private display data */
 
 struct SDL_PrivateVideoData {
-  NPDevice* device2d_;  // The PINPAPI 2D device.                                                                                                                           
-  NPDeviceContext2D context2d_;  // The PINPAPI 2D drawing context.                 
-
   int bpp;
   int w, h;
   int pitch;
   void *buffer;
   SDL_Color* palette;
+
+  SDL_mutex* image_data_mu;
+  int ow, oh; // plugin output dimensions
+  pp::ImageData* image_data;
+  pp::Graphics2D* context2d;  // The PINPAPI 2D drawing context.
 };
 
 #endif /* _SDL_naclvideo_h */

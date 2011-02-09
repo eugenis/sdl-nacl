@@ -27,7 +27,11 @@
 
 #include "SDL_naclaudio.h"
 
-extern NPDevice* NPN_AcquireDevice(NPP instance, NPDeviceID device);
+// extern NPDevice* NPN_AcquireDevice(NPP instance, NPDeviceID device);
+
+#include <ppapi/cpp/instance.h>
+
+extern pp::Instance* global_pp_instance;
 
 extern "C" {
 
@@ -38,8 +42,6 @@ extern "C" {
 #include "../SDL_audiomem.h"
 #include "../SDL_audio_c.h"
 #include "../SDL_audiodev_c.h"
-
-extern NPP global_npp;
 
 /* The tag name used by NACL audio */
 #define NACLAUD_DRIVER_NAME         "nacl"
@@ -54,11 +56,15 @@ static void NACLAUD_CloseAudio(_THIS);
 /* Audio driver bootstrap functions */
 static int NACLAUD_Available(void)
 {
+
+
+
+
   // This code needs blocking push mode to work, which is currently (3 Oct 2010) not implemented in NaCl.
   // https://wiki.mozilla.org/Plugins:PepperAudioAPI#Model_Two:_Blocking_Push_Model
   const char *envr = SDL_getenv("SDL_AUDIODRIVER");
   // Available if NPP is set and SDL_AUDIODRIVER is either unset, empty, or "nacl".
-  if (global_npp &&
+  if (global_pp_instance &&
       (!envr || !*envr || SDL_strcmp(envr, NACLAUD_DRIVER_NAME) == 0)) {
     printf("nacl audio is available\n");
     return 1;
@@ -94,8 +100,8 @@ static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
 	}
 	SDL_memset(_this->hidden, 0, (sizeof *_this->hidden));
 
-	_this->hidden->device = NPN_AcquireDevice(global_npp, NPPepperAudioDevice);
-	assert(_this->hidden->device);
+	// _this->hidden->device = NPN_AcquireDevice(global_npp, NPPepperAudioDevice);
+	// assert(_this->hidden->device);
 
 	/* Set the function pointers */
 	_this->OpenAudio = NACLAUD_OpenAudio;
@@ -165,8 +171,8 @@ static void NACLAUD_CloseAudio(_THIS)
 
 struct InitializeContextCall {
   SDL_AudioDevice* _this;
-  NPDeviceContextAudioConfig cfg;
-  NPError init_err;
+  // NPDeviceContextAudioConfig cfg;
+  // NPError init_err;
   bool done;
 
   SDL_mutex* mu;
@@ -174,20 +180,20 @@ struct InitializeContextCall {
 };
 
 void initialize_context(void* data) {
-  InitializeContextCall& call = *(InitializeContextCall*)data;
-  NPDeviceContextAudioConfig& cfg = call.cfg;
+  // InitializeContextCall& call = *(InitializeContextCall*)data;
+  // NPDeviceContextAudioConfig& cfg = call.cfg;
 
-  SDL_LockMutex(call.mu);
-  // printf("== initializeContext\n");
-  call.init_err = call._this->hidden->device->initializeContext(
-      global_npp, &cfg, &call._this->hidden->context);
-  // printf("== initializeContext done\n");
-  assert(call.init_err == NPERR_NO_ERROR);
-  call.done = true;
-  // printf("== signal\n");
-  SDL_CondSignal(call.cv);
-  // printf("== unlock\n");
-  SDL_UnlockMutex(call.mu);
+  // SDL_LockMutex(call.mu);
+  // // printf("== initializeContext\n");
+  // call.init_err = call._this->hidden->device->initializeContext(
+  //     global_npp, &cfg, &call._this->hidden->context);
+  // // printf("== initializeContext done\n");
+  // assert(call.init_err == NPERR_NO_ERROR);
+  // call.done = true;
+  // // printf("== signal\n");
+  // SDL_CondSignal(call.cv);
+  // // printf("== unlock\n");
+  // SDL_UnlockMutex(call.mu);
 }
 #include <math.h>
 static void AudioCallback(NPDeviceContextAudio *context) {
@@ -270,52 +276,52 @@ static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 {
   // printf("NACLAUD_OpenAudio\n");
 
-  InitializeContextCall call;
-  NPDeviceContextAudioConfig& cfg = call.cfg;
-  SDL_memset(&cfg, 0, sizeof(NPDeviceContextAudioConfig));
-  cfg.sampleRate = spec->freq;
+  // InitializeContextCall call;
+  // NPDeviceContextAudioConfig& cfg = call.cfg;
+  // SDL_memset(&cfg, 0, sizeof(NPDeviceContextAudioConfig));
+  // cfg.sampleRate = spec->freq;
  
-  Uint16 test_format = SDL_FirstAudioFormat(spec->format);
-  assert(test_format == AUDIO_S16LSB);
+  // Uint16 test_format = SDL_FirstAudioFormat(spec->format);
+  // assert(test_format == AUDIO_S16LSB);
 
-  cfg.sampleType = NPAudioSampleTypeInt16;
-  cfg.outputChannelMap = spec->channels == 2 ? NPAudioChannelStereo : NPAudioChannelMono;
-  cfg.inputChannelMap = NPAudioChannelNone;
-  cfg.sampleFrameCount = spec->samples;
-  cfg.startThread = 1;  // Start a thread for the audio producer.
-  cfg.flags = 0;
-  cfg.callback = AudioCallback;
-  cfg.userData = reinterpret_cast<void*>(_this);
+  // cfg.sampleType = NPAudioSampleTypeInt16;
+  // cfg.outputChannelMap = spec->channels == 2 ? NPAudioChannelStereo : NPAudioChannelMono;
+  // cfg.inputChannelMap = NPAudioChannelNone;
+  // cfg.sampleFrameCount = spec->samples;
+  // cfg.startThread = 1;  // Start a thread for the audio producer.
+  // cfg.flags = 0;
+  // cfg.callback = AudioCallback;
+  // cfg.userData = reinterpret_cast<void*>(_this);
 
-  // printf("freq %d, samples %d\n", spec->freq, spec->samples);
+  // // printf("freq %d, samples %d\n", spec->freq, spec->samples);
  
-  call._this = _this;
-  call.done = false;
-  call.mu = SDL_CreateMutex();
-  call.cv = SDL_CreateCond();
+  // call._this = _this;
+  // call.done = false;
+  // call.mu = SDL_CreateMutex();
+  // call.cv = SDL_CreateCond();
 
-  SDL_LockMutex(call.mu);
-  // printf("starting async call\n");
-  NPN_PluginThreadAsyncCall(global_npp, initialize_context, &call);
-  while (!call.done) {
-    // printf("== wait\n");
-    SDL_CondWait(call.cv, call.mu);
-  }
-  // printf("==done!\n");
-  SDL_UnlockMutex(call.mu);
+  // SDL_LockMutex(call.mu);
+  // // printf("starting async call\n");
+  // NPN_PluginThreadAsyncCall(global_npp, initialize_context, &call);
+  // while (!call.done) {
+  //   // printf("== wait\n");
+  //   SDL_CondWait(call.cv, call.mu);
+  // }
+  // // printf("==done!\n");
+  // SDL_UnlockMutex(call.mu);
 
-  SDL_DestroyMutex(call.mu);
-  SDL_DestroyCond(call.cv);
+  // SDL_DestroyMutex(call.mu);
+  // SDL_DestroyCond(call.cv);
 
-  assert(call.init_err == NPERR_NO_ERROR);
+  // assert(call.init_err == NPERR_NO_ERROR);
 
-  /* Allocate mixing buffer */
-  _this->hidden->mixlen = spec->size;
-  _this->hidden->mixbuf = (Uint8 *) SDL_AllocAudioMem(_this->hidden->mixlen);
-  if (_this->hidden->mixbuf == NULL) {
-    return -1;
-  }
-  SDL_memset(_this->hidden->mixbuf, spec->silence, spec->size);
+  // /* Allocate mixing buffer */
+  // _this->hidden->mixlen = spec->size;
+  // _this->hidden->mixbuf = (Uint8 *) SDL_AllocAudioMem(_this->hidden->mixlen);
+  // if (_this->hidden->mixbuf == NULL) {
+  //   return -1;
+  // }
+  // SDL_memset(_this->hidden->mixbuf, spec->silence, spec->size);
 
   // Do not create an audio thread.
   return 1;

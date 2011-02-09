@@ -42,8 +42,8 @@ struct SDL_PrivateAudioData {
   Uint8 *mixbuf;
   Uint32 mixlen;
 
-  NPDevice* device;
-  NPDeviceContextAudio context;
+  // NPDevice* device;
+  // NPDeviceContextAudio context;
 };
 
 #endif /* _SDL_naclaudio_h */

@@ -36,6 +36,15 @@ static EventQueue event_queue;
 
 
 void SDL_NACL_PushEvent(NPPepperEvent* nppevent) {
+
+
+
+  return;
+
+
+
+
+
   switch (nppevent->type) {
   case NPEventType_MouseDown:
     printf("mouse down\n");

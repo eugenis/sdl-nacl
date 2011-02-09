@@ -7,11 +7,12 @@
 extern "C" {
 #endif
 
-#include <nacl/nacl_npapi.h>
-#include <nacl/npapi_extensions.h>
+// #include <ppapi/cpp/instance.h>
+// #include <nacl/nacl_npapi.h>
+// #include <nacl/npapi_extensions.h>
 
-void SDL_NACL_SetNPP(NPP npp);
-void SDL_NACL_PushEvent(NPPepperEvent* nppevent);
+void SDL_NACL_SetInstance(void* instance);
+// void SDL_NACL_PushEvent(NPPepperEvent* nppevent);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
