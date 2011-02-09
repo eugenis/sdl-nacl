@@ -298,10 +298,10 @@ static void flush(void* data, int32_t unused) {
 
   SDL_LockMutex(_this->hidden->image_data_mu);
 
-  fprintf(stderr, "paint\n");
+  // fprintf(stderr, "paint\n");
   _this->hidden->context2d->PaintImageData(*_this->hidden->image_data, pp::Point());
 
-  fprintf(stderr, "flush\n");
+  // fprintf(stderr, "flush\n");
   _this->hidden->context2d->Flush(pp::CompletionCallback(&flush, _this));
 
   SDL_UnlockMutex(_this->hidden->image_data_mu);
@@ -312,7 +312,7 @@ static void NACL_SetCaption(_THIS, const char* title, const char* icon) {
 
 static void flip(_THIS) {
   // printf("flip: this %p\n", _this);
-  printf("flip: h %d w %d bpp %d\n", _this->hidden->h, _this->hidden->w, _this->hidden->bpp);
+  // printf("flip: h %d w %d bpp %d\n", _this->hidden->h, _this->hidden->w, _this->hidden->bpp);
   assert(_this->hidden->bpp == 8);
   assert(_this->hidden->image_data);
   assert(_this->hidden->w <= _this->hidden->ow);
