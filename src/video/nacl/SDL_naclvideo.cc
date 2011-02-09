@@ -301,7 +301,7 @@ static void flush(void* data, int32_t unused) {
   fprintf(stderr, "paint\n");
   _this->hidden->context2d->PaintImageData(*_this->hidden->image_data, pp::Point());
 
-  fprintf(stderr, "blocking flush\n");
+  fprintf(stderr, "flush\n");
   _this->hidden->context2d->Flush(pp::CompletionCallback(&flush, _this));
 
   SDL_UnlockMutex(_this->hidden->image_data_mu);
