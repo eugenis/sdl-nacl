@@ -27,14 +27,7 @@
 
 #include "SDL_naclaudio.h"
 
-// extern NPDevice* NPN_AcquireDevice(NPP instance, NPDeviceID device);
-
 #include <ppapi/cpp/instance.h>
-
-#include <limits>
-#include <cmath>
-
-
 
 extern pp::Instance* global_pp_instance;
 
@@ -78,9 +71,7 @@ static int NACLAUD_Available(void)
 
 static void NACLAUD_DeleteDevice(SDL_AudioDevice *device)
 {
-  // TODO: delete the device
-	// SDL_free(device->hidden);
-	// SDL_free(device);
+  // stop playback? likely main thread only.
 }
 
 static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
@@ -139,81 +130,21 @@ AudioBootStrap NACLAUD_bootstrap = {
 static void NACLAUD_WaitAudio(_THIS)
 {
   assert(0);
-  // SDL_LockMutex(call.mu);
-  // printf("starting async call\n");
-  // NPN_PluginThreadAsyncCall(global_npp, initialize_context, &call);
-  // while (!call.done) {
-  //   printf("== wait\n");
-  //   SDL_CondWait(call.cv, call.mu);
-  // }
-  // printf("==done!\n");
-  // SDL_UnlockMutex(call.mu);
-
-  // SDL_Delay(1);
-  // Nothing to do! PlayAudio is blocking until the device is ready for another buffer.
 }
 
 static void NACLAUD_PlayAudio(_THIS)
 {
   assert(0);
-  // NPDevice* device = _this->hidden->device;
-  // NPDeviceContextAudio& context = _this->hidden->context;
-  // if (!context.outBuffer) {
-  //   printf("too early? let's wait a bit\n");
-  //   while (!context.outBuffer) {
-  //     printf("waiting...\n");
-  //     SDL_Delay(2);
-  //   }
-  // }
-  // printf("PlayAudio size %d\n", _this->hidden->mixlen);
-  // assert(context.outBuffer);
-  // memcpy(context.outBuffer, _this->hidden->mixbuf, _this->hidden->mixlen);
-  // device->flushContext(global_npp, &context, NULL, NULL);
 }
 
 static Uint8 *NACLAUD_GetAudioBuf(_THIS)
 {
-	return(_this->hidden->mixbuf);
 }
 
 static void NACLAUD_CloseAudio(_THIS)
 {
-	if ( _this->hidden->mixbuf != NULL ) {
-		SDL_FreeAudioMem(_this->hidden->mixbuf);
-		_this->hidden->mixbuf = NULL;
-	}
 }
 
-struct InitializeContextCall {
-  SDL_AudioDevice* _this;
-  // NPDeviceContextAudioConfig cfg;
-  // NPError init_err;
-  bool done;
-
-  SDL_mutex* mu;
-  SDL_cond* cv;
-};
-
-void initialize_context(void* data) {
-  // InitializeContextCall& call = *(InitializeContextCall*)data;
-  // NPDeviceContextAudioConfig& cfg = call.cfg;
-
-  // SDL_LockMutex(call.mu);
-  // // printf("== initializeContext\n");
-  // call.init_err = call._this->hidden->device->initializeContext(
-  //     global_npp, &cfg, &call._this->hidden->context);
-  // // printf("== initializeContext done\n");
-  // assert(call.init_err == NPERR_NO_ERROR);
-  // call.done = true;
-  // // printf("== signal\n");
-  // SDL_CondSignal(call.cv);
-  // // printf("== unlock\n");
-  // SDL_UnlockMutex(call.mu);
-}
-
-  const double kPi = 3.141592653589;
-  const double kTwoPi = 2.0 * kPi;
-  const int kChannels = 2;
 
 static void AudioCallback(void* samples, size_t buffer_size, void* data) {
   SDL_AudioDevice* _this = reinterpret_cast<SDL_AudioDevice*>(data);
@@ -246,66 +177,9 @@ static void AudioCallback(void* samples, size_t buffer_size, void* data) {
   //     }
   //   }
 
-
-
   _this->spec.callback(_this->spec.userdata, (Uint8*)samples, buffer_size);
-  printf("back from client callback\n");
 
   return;
-
-  // SDL_AudioDevice* audio = (SDL_AudioDevice*)context->config.userData;
-  // Uint8 *stream;
-  // int    stream_len;
-  // void  *udata;
-  // void (SDLCALL *fill)(void *userdata,Uint8 *stream, int len);
-  // int    silence;
-
-  // fill  = audio->spec.callback;
-  // udata = audio->spec.userdata;
-  
-
-  // /* Fill the current buffer with sound */
-  // if ( audio->convert.needed ) {
-  //   if ( audio->convert.buf ) {
-  //     stream = audio->convert.buf;
-  //   } else {
-  //     return;
-  //   }
-  // } else {
-  //   stream = audio->GetAudioBuf(audio);
-  //   if ( stream == NULL ) {
-  //     stream = audio->fake_stream;
-  //   }
-  // }
-
-  // SDL_memset(stream, silence, stream_len);
-
-  // // printf("ready to fill\n");
-  // if ( ! audio->paused ) {
-  //   SDL_mutexP(audio->mixer_lock);
-  //   (*fill)(udata, stream, stream_len);
-  //   // printf("filled\n");
-  //   SDL_mutexV(audio->mixer_lock);
-  // }
-
-  // /* Convert the audio if necessary */
-  // if ( audio->convert.needed ) {
-  //   SDL_ConvertAudio(&audio->convert);
-  //   stream = audio->GetAudioBuf(audio);
-  //   if ( stream == NULL ) {
-  //     stream = audio->fake_stream;
-  //   }
-  //   SDL_memcpy(stream, audio->convert.buf,
-  // 	       audio->convert.len_cvt);
-  // }
-
-  // // printf("sending data to the browser\n");
-  // // Play the audio.
-  // const size_t sample_count  = context->config.sampleFrameCount;
-  // const size_t channel_count = context->config.outputChannelMap;
-  // assert(sample_count * channel_count * 2 == stream_len);
-  // int16_t* buf = reinterpret_cast<int16_t*>(context->outBuffer);
-  // memcpy(buf, stream, stream_len);
 }
 
 
@@ -318,54 +192,6 @@ static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
   spec->format = AUDIO_S16LSB;
   spec->channels = 2;
   spec->samples = _this->hidden->sample_frame_count;
-
-
-  // InitializeContextCall call;
-  // NPDeviceContextAudioConfig& cfg = call.cfg;
-  // SDL_memset(&cfg, 0, sizeof(NPDeviceContextAudioConfig));
-  // cfg.sampleRate = spec->freq;
-
-  // Uint16 test_format = SDL_FirstAudioFormat(spec->format);
-  // assert(test_format == AUDIO_S16LSB);
-
-  // cfg.sampleType = NPAudioSampleTypeInt16;
-  // cfg.outputChannelMap = spec->channels == 2 ? NPAudioChannelStereo : NPAudioChannelMono;
-  // cfg.inputChannelMap = NPAudioChannelNone;
-  // cfg.sampleFrameCount = spec->samples;
-  // cfg.startThread = 1;  // Start a thread for the audio producer.
-  // cfg.flags = 0;
-  // cfg.callback = AudioCallback;
-  // cfg.userData = reinterpret_cast<void*>(_this);
-
-  // // printf("freq %d, samples %d\n", spec->freq, spec->samples);
-
-  // call._this = _this;
-  // call.done = false;
-  // call.mu = SDL_CreateMutex();
-  // call.cv = SDL_CreateCond();
-
-  // SDL_LockMutex(call.mu);
-  // // printf("starting async call\n");
-  // NPN_PluginThreadAsyncCall(global_npp, initialize_context, &call);
-  // while (!call.done) {
-  //   // printf("== wait\n");
-  //   SDL_CondWait(call.cv, call.mu);
-  // }
-  // // printf("==done!\n");
-  // SDL_UnlockMutex(call.mu);
-
-  // SDL_DestroyMutex(call.mu);
-  // SDL_DestroyCond(call.cv);
-
-  // assert(call.init_err == NPERR_NO_ERROR);
-
-  /* Allocate mixing buffer */
-  // _this->hidden->mixlen = spec->size;
-  // _this->hidden->mixbuf = (Uint8 *) SDL_AllocAudioMem(_this->hidden->mixlen);
-  // if (_this->hidden->mixbuf == NULL) {
-  //   return -1;
-  // }
-  // SDL_memset(_this->hidden->mixbuf, spec->silence, spec->size);
 
   // Do not create an audio thread.
   return 1;
