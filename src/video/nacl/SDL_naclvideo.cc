@@ -246,29 +246,6 @@ static void NACL_UnlockHWSurface(_THIS, SDL_Surface *surface)
 	return;
 }
 
-// static void write_ppm(_THIS, char* fname) {
-//   FILE* fp = fopen(fname, "w");
-//   int x, y;
-//   assert(_this->hidden->bpp == 8);
-//   fprintf(fp, "P3\n%d %d\n255\n", _this->hidden->w, _this->hidden->h);
-//   for (y = 0; y < _this->hidden->h; ++y) {
-//     unsigned char* pixels = ((unsigned char*)_this->hidden->buffer) + _this->hidden->pitch * y;
-//     for (x = 0; x < _this->hidden->w; ++x) {
-//       SDL_Color pixel = _this->hidden->palette[pixels[x]];
-//       fprintf(fp, "%d %d %d  ", pixel.r, pixel.g, pixel.b);
-//     }
-//     fprintf(fp, "\n");
-//   }
-//   fclose(fp);
-// }
-
-// This is called by the brower when the 2D context has been flushed to the
-// browser window.
-// static void FlushCallback(NPP instance, NPDeviceContext* context,
-//   NPError err, void* user_data) {
-// }
-
-
 
 static void flush(void* data, int32_t unused) {
   SDL_VideoDevice* _this = reinterpret_cast<SDL_VideoDevice*>(data);
@@ -314,21 +291,10 @@ static void flip(_THIS) {
 
   SDL_UnlockMutex(_this->hidden->image_data_mu);
 
-  // pp::Module::Get()->core()->CallOnMainThread(0, pp::CompletionCallback(flush, _this), 0);
-
-
-  // NPN_PluginThreadAsyncCall(global_npp, (void (*)(void*))&flush, _this);
 }
 
 static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
-  /* static int frameno; */
-  /* char fname[100]; */
-  /* if (_this->hidden->bpp == 0) // not initialized yet */
-  /*   return; */
-  /* snprintf(fname, 100, "frame%05d.ppm", frameno++); */
-  /* write_ppm(_this, fname); */
-
   if (_this->hidden->bpp == 0) // not initialized yet
     return;
   flip(_this);
