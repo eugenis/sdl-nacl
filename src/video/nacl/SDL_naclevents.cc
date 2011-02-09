@@ -35,70 +35,62 @@ extern "C" {
 static EventQueue event_queue;
 
 
-void SDL_NACL_PushEvent(NPPepperEvent* nppevent) {
+void SDL_NACL_PushEvent(const PP_InputEvent* ppevent) {
 
-
-
-  return;
-
-
-
-
-
-  switch (nppevent->type) {
-  case NPEventType_MouseDown:
+  switch (ppevent->type) {
+  case PP_INPUTEVENT_TYPE_MOUSEDOWN:
     printf("mouse down\n");
     break;
-  case NPEventType_MouseUp:
+  case PP_INPUTEVENT_TYPE_MOUSEUP:
     printf("mouse up\n");
     break;
-  case NPEventType_MouseMove:
+  case PP_INPUTEVENT_TYPE_MOUSEMOVE:
     printf("mouse move\n");
     break;
-  case NPEventType_MouseEnter:
+  case PP_INPUTEVENT_TYPE_MOUSEENTER:
     printf("mouse enter\n");
     break;
-  case NPEventType_MouseLeave:
+  case PP_INPUTEVENT_TYPE_MOUSELEAVE:
     printf("mouse leave\n");
     break;
-  case NPEventType_MouseWheel:
+  case PP_INPUTEVENT_TYPE_MOUSEWHEEL:
     printf("mouse wheel\n");
     break;
-  case NPEventType_RawKeyDown:
-  case NPEventType_KeyDown:
-  case NPEventType_KeyUp:
+  case PP_INPUTEVENT_TYPE_RAWKEYDOWN:
+  case PP_INPUTEVENT_TYPE_KEYDOWN:
+  case PP_INPUTEVENT_TYPE_KEYUP:
     printf("key\n");
     break;
-  case NPEventType_Char:
+  case PP_INPUTEVENT_TYPE_CHAR:
     printf("char\n");
     break;
-  case NPEventType_Minimize:
-    printf("minimize\n");
-    break;
-  case NPEventType_Focus:
-    printf("focus\n");
-    break;
-  case NPEventType_Device:
-    printf("device\n");
-    break;
+  // case PP_INPUTEVENT_TYPE_MINIMIZE:
+  //   printf("minimize\n");
+  //   break;
+  // case PP_INPUTEVENT_TYPE_FOCUS:
+  //   printf("focus\n");
+  //   break;
+  // case PP_INPUTEVENT_TYPE_DEVICE:
+  //   printf("device\n");
+  //   break;
   default:
     printf("unknown\n");
   }
 
-  NPPepperEvent* copy = (NPPepperEvent*)malloc(sizeof(NPPepperEvent));
-  memcpy(copy, nppevent, sizeof(NPPepperEvent));
+  PP_InputEvent* copy = (PP_InputEvent*)malloc(sizeof(PP_InputEvent));
+  memcpy(copy, ppevent, sizeof(PP_InputEvent));
   event_queue.PushEvent(copy);
 }
 
 static Uint8 translateButton(/*NPMouseButtons*/ int32_t button) {
   switch (button) {
-  case NPMouseButton_Left:
+  case PP_INPUTEVENT_MOUSEBUTTON_LEFT:
     return SDL_BUTTON_LEFT;
-  case NPMouseButton_Middle:
+  case PP_INPUTEVENT_MOUSEBUTTON_MIDDLE:
     return SDL_BUTTON_MIDDLE;
-  case NPMouseButton_Right:
+  case PP_INPUTEVENT_MOUSEBUTTON_RIGHT:
     return SDL_BUTTON_RIGHT;
-  case NPMouseButton_None:
+  case PP_INPUTEVENT_MOUSEBUTTON_NONE:
   default:
    return 0;
   }
@@ -130,22 +122,22 @@ static SDLKey translateKey(uint32_t code) {
 
 void NACL_PumpEvents(_THIS)
 {
-  NPPepperEvent* event;
+  PP_InputEvent* event;
   SDL_keysym keysym;
   while (event = event_queue.PopEvent()) {
-    if (event->type == NPEventType_MouseDown) {
+    if (event->type == PP_INPUTEVENT_TYPE_MOUSEDOWN) {
       SDL_PrivateMouseButton(SDL_PRESSED, translateButton(event->u.mouse.button), 0, 0);
-    } else if (event->type == NPEventType_MouseUp) {
+    } else if (event->type == PP_INPUTEVENT_TYPE_MOUSEUP) {
       SDL_PrivateMouseButton(SDL_RELEASED, translateButton(event->u.mouse.button), 0, 0);
-    } else if (event->type == NPEventType_KeyDown) {
+    } else if (event->type == PP_INPUTEVENT_TYPE_KEYDOWN) {
       keysym.scancode = 0;
-      keysym.sym = translateKey(event->u.key.normalizedKeyCode);
+      keysym.sym = translateKey(event->u.key.key_code);
       keysym.mod = KMOD_NONE;
       keysym.unicode = 0;
       SDL_PrivateKeyboard(SDL_PRESSED, &keysym);
-    } else if (event->type == NPEventType_KeyUp) {
+    } else if (event->type == PP_INPUTEVENT_TYPE_KEYUP) {
       keysym.scancode = 0;
-      keysym.sym = translateKey(event->u.key.normalizedKeyCode);
+      keysym.sym = translateKey(event->u.key.key_code);
       keysym.mod = KMOD_NONE;
       keysym.unicode = 0;
       SDL_PrivateKeyboard(SDL_RELEASED, &keysym);

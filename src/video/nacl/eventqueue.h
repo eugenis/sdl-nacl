@@ -4,8 +4,7 @@
 #include "SDL_mutex.h"
 
 #include <queue>
-#include <nacl/nacl_npapi.h>
-#include <nacl/npapi_extensions.h>
+#include <ppapi/c/pp_input_event.h>
 
 class EventQueue {
 public:
@@ -17,9 +16,9 @@ public:
     SDL_DestroyMutex(mu_);
   }
 
-  NPPepperEvent* PopEvent() {
+  PP_InputEvent* PopEvent() {
     SDL_LockMutex(mu_);
-    NPPepperEvent* event = NULL;
+    PP_InputEvent* event = NULL;
     if (!queue_.empty()) {
       event = queue_.front();
       queue_.pop();
@@ -28,14 +27,14 @@ public:
     return event;
   }
 
-  void PushEvent(NPPepperEvent* event) {
+  void PushEvent(PP_InputEvent* event) {
     SDL_LockMutex(mu_);
     queue_.push(event);
     SDL_UnlockMutex(mu_);
   }
 
 private:
-  std::queue<NPPepperEvent*> queue_;
+  std::queue<PP_InputEvent*> queue_;
   SDL_mutex* mu_;
 };
 
