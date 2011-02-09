@@ -31,6 +31,11 @@
 
 #include <ppapi/cpp/instance.h>
 
+#include <limits>
+#include <cmath>
+
+
+
 extern pp::Instance* global_pp_instance;
 
 extern "C" {
@@ -46,6 +51,8 @@ extern "C" {
 /* The tag name used by NACL audio */
 #define NACLAUD_DRIVER_NAME         "nacl"
 
+const uint32_t kSampleFrameCount = 4096u;
+
 /* Audio driver functions */
 static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec);
 static void NACLAUD_WaitAudio(_THIS);
@@ -53,17 +60,14 @@ static void NACLAUD_PlayAudio(_THIS);
 static Uint8 *NACLAUD_GetAudioBuf(_THIS);
 static void NACLAUD_CloseAudio(_THIS);
 
+static void AudioCallback(void* samples, size_t buffer_size, void* data);
+
+
 /* Audio driver bootstrap functions */
 static int NACLAUD_Available(void)
 {
-
-
-
-
-  // This code needs blocking push mode to work, which is currently (3 Oct 2010) not implemented in NaCl.
-  // https://wiki.mozilla.org/Plugins:PepperAudioAPI#Model_Two:_Blocking_Push_Model
   const char *envr = SDL_getenv("SDL_AUDIODRIVER");
-  // Available if NPP is set and SDL_AUDIODRIVER is either unset, empty, or "nacl".
+  // Available if global_pp_instance is set and SDL_AUDIODRIVER is either unset, empty, or "nacl".
   if (global_pp_instance &&
       (!envr || !*envr || SDL_strcmp(envr, NACLAUD_DRIVER_NAME) == 0)) {
     printf("nacl audio is available\n");
@@ -75,15 +79,15 @@ static int NACLAUD_Available(void)
 static void NACLAUD_DeleteDevice(SDL_AudioDevice *device)
 {
   // TODO: delete the device
-	SDL_free(device->hidden);
-	SDL_free(device);
+	// SDL_free(device->hidden);
+	// SDL_free(device);
 }
 
 static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
 {
 	SDL_AudioDevice *_this;
 
-	// printf("NACLAUD_CreateDevice\n");
+	printf("NACLAUD_CreateDevice\n");
 	/* Initialize all variables that we clean on shutdown */
 	_this = (SDL_AudioDevice *)SDL_malloc(sizeof(SDL_AudioDevice));
 	if ( _this ) {
@@ -100,8 +104,19 @@ static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
 	}
 	SDL_memset(_this->hidden, 0, (sizeof *_this->hidden));
 
-	// _this->hidden->device = NPN_AcquireDevice(global_npp, NPPepperAudioDevice);
-	// assert(_this->hidden->device);
+
+        _this->hidden->sample_frame_count =
+            pp::AudioConfig::RecommendSampleFrameCount(PP_AUDIOSAMPLERATE_44100,
+                kSampleFrameCount);
+        _this->hidden->audio = pp::Audio(
+            global_pp_instance,
+            pp::AudioConfig(global_pp_instance,
+                PP_AUDIOSAMPLERATE_44100,
+                _this->hidden->sample_frame_count),
+            AudioCallback, _this);
+
+        printf("starting audio playback\n");
+        _this->hidden->audio.StartPlayback();
 
 	/* Set the function pointers */
 	_this->OpenAudio = NACLAUD_OpenAudio;
@@ -195,26 +210,47 @@ void initialize_context(void* data) {
   // // printf("== unlock\n");
   // SDL_UnlockMutex(call.mu);
 }
-#include <math.h>
-static void AudioCallback(NPDeviceContextAudio *context) {
-  printf("============== audio callback\n");
-  fprintf(stderr, "============== audio callback z\n");
-  if (!context)
-    return;
 
-  // static unsigned time_value_ = 0;
-  // const size_t sample_count  = context->config.sampleFrameCount;
-  // const size_t channel_count = context->config.outputChannelMap;
-  // const double theta = 2 * 3.1415 * 10000 / context->config.sampleRate;
-  // int16_t* buf = reinterpret_cast<int16_t*>(context->outBuffer);
-  // for (size_t sample = 0; sample < sample_count; ++sample) {
-  //   int16_t value = static_cast<int16_t>(sin(theta * time_value_) *
-  // 					 0xFFFF);
-  //   ++time_value_;  // Just let this wrap.
-  //   for (size_t channel = 0; channel < channel_count; ++channel) {
-  //     *buf++ = value;
+  const double kPi = 3.141592653589;
+  const double kTwoPi = 2.0 * kPi;
+  const int kChannels = 2;
+
+static void AudioCallback(void* samples, size_t buffer_size, void* data) {
+  SDL_AudioDevice* _this = reinterpret_cast<SDL_AudioDevice*>(data);
+  printf("============== audio callback\n");
+
+
+  // const double frequency = 440;
+  // const double delta = kTwoPi * frequency / PP_AUDIOSAMPLERATE_44100;
+  // const int16_t max_int16 = std::numeric_limits<int16_t>::max();
+
+  //   int16_t* buff = reinterpret_cast<int16_t*>(samples);
+
+  //   // Make sure we can't write outside the buffer.
+  //   assert(buffer_size >= (sizeof(*buff) * kChannels *
+  //           _this->hidden->sample_frame_count));
+
+  //   double theta = 0.;
+
+  //   for (size_t sample_i = 0;
+  //        sample_i < _this->hidden->sample_frame_count;
+  //        ++sample_i, theta += delta) {
+  //     // Keep theta_ from going beyond 2*Pi.
+  //     if (theta > kTwoPi) {
+  //       theta -= kTwoPi;
+  //     }
+  //     double sin_value(std::sin(theta));
+  //     int16_t scaled_value = static_cast<int16_t>(sin_value * max_int16);
+  //     for (size_t channel = 0; channel < kChannels; ++channel) {
+  //       *buff++ = scaled_value;
+  //     }
   //   }
-  // }
+
+
+
+  _this->spec.callback(_this->spec.userdata, (Uint8*)samples, buffer_size);
+  printf("back from client callback\n");
+
   return;
 
   // SDL_AudioDevice* audio = (SDL_AudioDevice*)context->config.userData;
@@ -272,15 +308,23 @@ static void AudioCallback(NPDeviceContextAudio *context) {
   // memcpy(buf, stream, stream_len);
 }
 
+
 static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 {
-  // printf("NACLAUD_OpenAudio\n");
+  printf("NACLAUD_OpenAudio\n");
+
+  // We don't give a damn what the user wants.
+  spec->freq = 44100;
+  spec->format = AUDIO_S16LSB;
+  spec->channels = 2;
+  spec->samples = _this->hidden->sample_frame_count;
+
 
   // InitializeContextCall call;
   // NPDeviceContextAudioConfig& cfg = call.cfg;
   // SDL_memset(&cfg, 0, sizeof(NPDeviceContextAudioConfig));
   // cfg.sampleRate = spec->freq;
- 
+
   // Uint16 test_format = SDL_FirstAudioFormat(spec->format);
   // assert(test_format == AUDIO_S16LSB);
 
@@ -294,7 +338,7 @@ static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
   // cfg.userData = reinterpret_cast<void*>(_this);
 
   // // printf("freq %d, samples %d\n", spec->freq, spec->samples);
- 
+
   // call._this = _this;
   // call.done = false;
   // call.mu = SDL_CreateMutex();
@@ -315,7 +359,7 @@ static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 
   // assert(call.init_err == NPERR_NO_ERROR);
 
-  // /* Allocate mixing buffer */
+  /* Allocate mixing buffer */
   // _this->hidden->mixlen = spec->size;
   // _this->hidden->mixbuf = (Uint8 *) SDL_AllocAudioMem(_this->hidden->mixlen);
   // if (_this->hidden->mixbuf == NULL) {

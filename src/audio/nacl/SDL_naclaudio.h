@@ -29,10 +29,12 @@ extern "C" {
 #include "../SDL_sysaudio.h"
 }
 
-#include <nacl/nacl_imc.h>
-#include <nacl/nacl_npapi.h>
-#include <nacl/npapi_extensions.h>
-#include <nacl/npruntime.h>
+// #include <nacl/nacl_imc.h>
+// #include <nacl/nacl_npapi.h>
+// #include <nacl/npapi_extensions.h>
+// #include <nacl/npruntime.h>
+
+#include <ppapi/cpp/audio.h>
 
 /* Hidden "this" pointer for the video functions */
 #define _THIS	SDL_AudioDevice *_this
@@ -42,8 +44,9 @@ struct SDL_PrivateAudioData {
   Uint8 *mixbuf;
   Uint32 mixlen;
 
-  // NPDevice* device;
-  // NPDeviceContextAudio context;
+
+  int sample_frame_count;
+  pp::Audio audio;
 };
 
 #endif /* _SDL_naclaudio_h */
