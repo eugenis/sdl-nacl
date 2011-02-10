@@ -92,8 +92,10 @@ static SDL_VideoDevice *NACL_CreateDevice(int devindex)
 
         device->hidden->image_data_mu = SDL_CreateMutex();
 
-        device->hidden->ow = 400;
-        device->hidden->oh = 256;
+        // device->hidden->ow = 400;
+        // device->hidden->oh = 256;
+        device->hidden->ow = 1000;
+        device->hidden->oh = 700;
 
         printf("initialize 2d graphics... (instance %p)\n", (void*)global_pp_instance);
         if (device->hidden->context2d)
@@ -182,29 +184,33 @@ SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current,
 		SDL_free( _this->hidden->buffer );
 	}
 
+	bpp = 32; // Let SDL handle pixel format conversion.
+	width = _this->hidden->ow;
+	height = _this->hidden->oh;
+
 	_this->hidden->buffer = SDL_malloc(width * height * (bpp / 8));
 	if ( ! _this->hidden->buffer ) {
 		SDL_SetError("Couldn't allocate buffer for requested mode");
 		return(NULL);
 	}
 
-	if (bpp == 8) {
-	  _this->hidden->palette = (SDL_Color*)SDL_malloc(256 * sizeof(SDL_Color));
-	  if ( ! _this->hidden->palette ) {
-	    SDL_SetError("Couldn't allocate palette for requested 8-bit mode");
-	    return(NULL);
-	  }
-	}
+	// if (bpp == 8) {
+	//   _this->hidden->palette = (SDL_Color*)SDL_malloc(256 * sizeof(SDL_Color));
+	//   if ( ! _this->hidden->palette ) {
+	//     SDL_SetError("Couldn't allocate palette for requested 8-bit mode");
+	//     return(NULL);
+	//   }
+	// }
 
 /* 	printf("Setting mode %dx%d\n", width, height); */
 
 	SDL_memset(_this->hidden->buffer, 0, width * height * (bpp / 8));
-	if (_this->hidden->palette) {
-	  SDL_memset(_this->hidden->palette, 0, 256 * sizeof(SDL_Color));
-	}
+	// if (_this->hidden->palette) {
+	//   SDL_memset(_this->hidden->palette, 0, 256 * sizeof(SDL_Color));
+	// }
 
 	/* Allocate the new pixel format for the screen */
-	if ( ! SDL_ReallocFormat(current, bpp, 0, 0, 0, 0) ) {
+	if ( ! SDL_ReallocFormat(current, bpp, 0xFF0000, 0xFF00, 0xFF, 0xFF000000) ) {
 		SDL_free(_this->hidden->buffer);
 		_this->hidden->buffer = NULL;
 		SDL_SetError("Couldn't allocate new pixel format for requested mode");
@@ -267,26 +273,29 @@ static void NACL_SetCaption(_THIS, const char* title, const char* icon) {
 static void flip(_THIS) {
   // printf("flip: this %p\n", _this);
   // printf("flip: h %d w %d bpp %d\n", _this->hidden->h, _this->hidden->w, _this->hidden->bpp);
-  assert(_this->hidden->bpp == 8);
+  // assert(_this->hidden->bpp == 8);
   assert(_this->hidden->image_data);
-  assert(_this->hidden->w <= _this->hidden->ow);
-  assert(_this->hidden->h <= _this->hidden->oh);
+  assert(_this->hidden->w == _this->hidden->ow);
+  assert(_this->hidden->h == _this->hidden->oh);
 
   SDL_LockMutex(_this->hidden->image_data_mu);
 
-  uint32_t* pixel_bits = static_cast<uint32_t*>(_this->hidden->image_data->data());
-  assert(pixel_bits);
-  // printf("blitting to %p\n", pixel_bits);
-  for (int y = 0; y < _this->hidden->h; ++y) {
-    // printf("y = %d\n", y);
-    unsigned char* pixels = ((unsigned char*)_this->hidden->buffer) + _this->hidden->pitch * y;
-    for (int x = 0; x < _this->hidden->w; ++x) {
-      SDL_Color color = _this->hidden->palette[pixels[x]];
-      uint32_t val = 0xFF000000 + ((uint32_t)color.r << 16) + ((uint32_t)color.g << 8) +
-	((uint32_t)color.b);
-      pixel_bits[_this->hidden->ow * y + x] = val; // use stride() ?
-    }
-  }
+  SDL_memcpy(_this->hidden->image_data->data(), _this->hidden->buffer,
+	     _this->hidden->w * _this->hidden->h * _this->hidden->bpp / 8);
+
+  // uint32_t* pixel_bits = static_cast<uint32_t*>(_this->hidden->image_data->data());
+  // assert(pixel_bits);
+  // // printf("blitting to %p\n", pixel_bits);
+  // for (int y = 0; y < _this->hidden->h; ++y) {
+  //   // printf("y = %d\n", y);
+  //   unsigned char* pixels = ((unsigned char*)_this->hidden->buffer) + _this->hidden->pitch * y;
+  //   for (int x = 0; x < _this->hidden->w; ++x) {
+  //     SDL_Color color = _this->hidden->palette[pixels[x]];
+  //     uint32_t val = 0xFF000000 + ((uint32_t)color.r << 16) + ((uint32_t)color.g << 8) +
+  // 	((uint32_t)color.b);
+  //     pixel_bits[_this->hidden->ow * y + x] = val; // use stride() ?
+  //   }
+  // }
   // flush(_this);
 
   SDL_UnlockMutex(_this->hidden->image_data_mu);
