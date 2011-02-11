@@ -271,7 +271,6 @@ static void NACL_SetCaption(_THIS, const char* title, const char* icon) {
 }
 
 static void flip(_THIS) {
-  // printf("flip: this %p\n", _this);
   // printf("flip: h %d w %d bpp %d\n", _this->hidden->h, _this->hidden->w, _this->hidden->bpp);
   // assert(_this->hidden->bpp == 8);
   assert(_this->hidden->image_data);
@@ -279,6 +278,7 @@ static void flip(_THIS) {
   assert(_this->hidden->h == _this->hidden->oh);
 
   SDL_LockMutex(_this->hidden->image_data_mu);
+
 
   SDL_memcpy(_this->hidden->image_data->data(), _this->hidden->buffer,
 	     _this->hidden->w * _this->hidden->h * _this->hidden->bpp / 8);

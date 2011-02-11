@@ -6,6 +6,7 @@
 extern "C" {
 #include "SDL_audio.h"
 #include "../SDL_sysaudio.h"
+#include "SDL_mutex.h"
 }
 
 #include <ppapi/cpp/audio.h>
@@ -15,6 +16,7 @@ extern "C" {
 
 struct SDL_PrivateAudioData {
 
+  SDL_mutex* mu;
   int sample_frame_count;
   pp::Audio audio;
 };

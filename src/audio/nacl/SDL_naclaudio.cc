@@ -54,7 +54,7 @@ static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
 {
 	SDL_AudioDevice *_this;
 
-	printf("NACLAUD_CreateDevice\n");
+	printf("NACLAUD_CreateDevice v1\n");
 	/* Initialize all variables that we clean on shutdown */
 	_this = (SDL_AudioDevice *)SDL_malloc(sizeof(SDL_AudioDevice));
 	if ( _this ) {
@@ -71,6 +71,9 @@ static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
 	}
 	SDL_memset(_this->hidden, 0, (sizeof *_this->hidden));
 
+        // device->hidden->mu = SDL_CreateMutex();
+
+        // SDL_LockMutex(_this->hidden->mu);
 
         _this->hidden->sample_frame_count =
             pp::AudioConfig::RecommendSampleFrameCount(PP_AUDIOSAMPLERATE_44100,
@@ -153,7 +156,14 @@ static void AudioCallback(void* samples, size_t buffer_size, void* data) {
   //     }
   //   }
 
-  _this->spec.callback(_this->spec.userdata, (Uint8*)samples, buffer_size);
+  // TODO: lock!
+  if (_this->spec.callback) {
+    _this->spec.callback(_this->spec.userdata, (Uint8*)samples, buffer_size);
+  } else {
+    printf("silence...\n");
+    SDL_memset(samples, 0, buffer_size);
+  }
+  printf("audio callback done\n");
 
   return;
 }
