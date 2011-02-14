@@ -32,26 +32,18 @@ static void AudioCallback(void* samples, size_t buffer_size, void* data);
 /* Audio driver bootstrap functions */
 static int NACLAUD_Available(void)
 {
-  const char *envr = SDL_getenv("SDL_AUDIODRIVER");
-  // Available if gNaclPPInstance is set and SDL_AUDIODRIVER is either unset, empty, or "nacl".
-  if (gNaclPPInstance &&
-      (!envr || !*envr || SDL_strcmp(envr, NACLAUD_DRIVER_NAME) == 0)) {
-    printf("nacl audio is available\n");
-    return 1;
-  }
-  return 0;
+  return !!gNaclPPInstance;
 }
 
 static void NACLAUD_DeleteDevice(SDL_AudioDevice *device)
 {
-  // stop playback? likely main thread only.
+  // We should stop playback here, but it can only be done on the main thread :(
 }
 
 static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
 {
 	SDL_AudioDevice *_this;
 
-	printf("NACLAUD_CreateDevice v1\n");
 	/* Initialize all variables that we clean on shutdown */
 	_this = (SDL_AudioDevice *)SDL_malloc(sizeof(SDL_AudioDevice));
 	if ( _this ) {
@@ -68,9 +60,9 @@ static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
 	}
 	SDL_memset(_this->hidden, 0, (sizeof *_this->hidden));
 
-        // device->hidden->mu = SDL_CreateMutex();
+        _this->hidden->mu = SDL_CreateMutex();
 
-        // SDL_LockMutex(_this->hidden->mu);
+        _this->hidden->opened = false;
 
         _this->hidden->sample_frame_count =
             pp::AudioConfig::RecommendSampleFrameCount(PP_AUDIOSAMPLERATE_44100,
@@ -82,7 +74,7 @@ static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
                 _this->hidden->sample_frame_count),
             AudioCallback, _this);
 
-        printf("starting audio playback\n");
+        // Start audio playback while we are still on the main thread.
         _this->hidden->audio.StartPlayback();
 
 	/* Set the function pointers */
@@ -102,21 +94,27 @@ AudioBootStrap NACLAUD_bootstrap = {
 
 static void NACLAUD_CloseAudio(_THIS)
 {
+  SDL_LockMutex(_this->hidden->mu);
+  _this->hidden->opened = 0;
+  SDL_UnlockMutex(_this->hidden->mu);
 }
 
 
 static void AudioCallback(void* samples, size_t buffer_size, void* data) {
   SDL_AudioDevice* _this = reinterpret_cast<SDL_AudioDevice*>(data);
-  printf("============== audio callback\n");
 
   // TODO: lock!
-  if (_this->spec.callback) {
-    _this->spec.callback(_this->spec.userdata, (Uint8*)samples, buffer_size);
+  SDL_LockMutex(_this->hidden->mu);
+  if (_this->hidden->opened) {
+    SDL_memset(samples, _this->spec.silence, buffer_size);
+    SDL_LockMutex(_this->mixer_lock);
+    (*_this->spec.callback)(_this->spec.userdata,
+        (Uint8*)samples, buffer_size);
+    SDL_UnlockMutex(_this->mixer_lock);
   } else {
-    printf("silence...\n");
     SDL_memset(samples, 0, buffer_size);
   }
-  printf("audio callback done\n");
+  SDL_UnlockMutex(_this->hidden->mu);
 
   return;
 }
@@ -124,13 +122,15 @@ static void AudioCallback(void* samples, size_t buffer_size, void* data) {
 
 static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 {
-  printf("NACLAUD_OpenAudio\n");
-
   // We don't give a damn what the user wants.
   spec->freq = 44100;
   spec->format = AUDIO_S16LSB;
   spec->channels = 2;
   spec->samples = _this->hidden->sample_frame_count;
+
+  SDL_LockMutex(_this->hidden->mu);
+  _this->hidden->opened = 1;
+  SDL_UnlockMutex(_this->hidden->mu);
 
   // Do not create an audio thread.
   return 1;
