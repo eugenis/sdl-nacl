@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <ppapi/cpp/instance.h>
 
-extern pp::Instance* global_pp_instance;
+extern pp::Instance* gNaclPPInstance;
 
 extern "C" {
 
@@ -36,8 +36,8 @@ static void AudioCallback(void* samples, size_t buffer_size, void* data);
 static int NACLAUD_Available(void)
 {
   const char *envr = SDL_getenv("SDL_AUDIODRIVER");
-  // Available if global_pp_instance is set and SDL_AUDIODRIVER is either unset, empty, or "nacl".
-  if (global_pp_instance &&
+  // Available if gNaclPPInstance is set and SDL_AUDIODRIVER is either unset, empty, or "nacl".
+  if (gNaclPPInstance &&
       (!envr || !*envr || SDL_strcmp(envr, NACLAUD_DRIVER_NAME) == 0)) {
     printf("nacl audio is available\n");
     return 1;
@@ -79,8 +79,8 @@ static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
             pp::AudioConfig::RecommendSampleFrameCount(PP_AUDIOSAMPLERATE_44100,
                 kSampleFrameCount);
         _this->hidden->audio = pp::Audio(
-            global_pp_instance,
-            pp::AudioConfig(global_pp_instance,
+            gNaclPPInstance,
+            pp::AudioConfig(gNaclPPInstance,
                 PP_AUDIOSAMPLERATE_44100,
                 _this->hidden->sample_frame_count),
             AudioCallback, _this);

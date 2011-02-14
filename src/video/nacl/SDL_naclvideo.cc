@@ -11,7 +11,9 @@
 #include <ppapi/cpp/completion_callback.h>
 #include <ppapi/cpp/image_data.h>
 
-pp::Instance* global_pp_instance;
+pp::Instance* gNaclPPInstance;
+static int gNaclVideoWidth;
+static int gNaclVideoHeight;
 
 extern "C" {
 
@@ -24,8 +26,10 @@ extern "C" {
 
 #define NACLVID_DRIVER_NAME "nacl"
 
-void SDL_NACL_SetInstance(void* instance) {
-  global_pp_instance = reinterpret_cast<pp::Instance*>(instance);
+void SDL_NACL_SetInstance(PP_Instance instance, int width, int height) {
+  gNaclPPInstance = pp::Module::Get()->InstanceForPPInstance(instance);
+  gNaclVideoWidth = width;
+  gNaclVideoHeight = height;
 }
 
 static void flush(void* data, int32_t unused);
@@ -53,7 +57,7 @@ static int NACL_Available(void)
 {
   const char *envr = SDL_getenv("SDL_VIDEODRIVER");
   // Available if NPP is set and SDL_VIDEODRIVER is either unset, empty, or "nacl".
-  if (global_pp_instance &&
+  if (gNaclPPInstance &&
       (!envr || !*envr || SDL_strcmp(envr, NACLVID_DRIVER_NAME) == 0)) {
     printf("nacl video is available\n");
     return 1;
@@ -71,7 +75,7 @@ static SDL_VideoDevice *NACL_CreateDevice(int devindex)
 {
 	SDL_VideoDevice *device;
 
-	assert(global_pp_instance);
+	assert(gNaclPPInstance);
 
 	printf("Creating a NaCl device\n");
 	/* Initialize all variables that we clean on shutdown */
@@ -92,25 +96,23 @@ static SDL_VideoDevice *NACL_CreateDevice(int devindex)
 
         device->hidden->image_data_mu = SDL_CreateMutex();
 
-        // device->hidden->ow = 400;
-        // device->hidden->oh = 256;
-        device->hidden->ow = 1000;
-        device->hidden->oh = 700;
+        device->hidden->ow = gNaclVideoWidth;
+        device->hidden->oh = gNaclVideoHeight;
 
-        printf("initialize 2d graphics... (instance %p)\n", (void*)global_pp_instance);
+        printf("initialize 2d graphics... (instance %p)\n", (void*)gNaclPPInstance);
         if (device->hidden->context2d)
           delete device->hidden->context2d;
-        device->hidden->context2d = new pp::Graphics2D(global_pp_instance,
+        device->hidden->context2d = new pp::Graphics2D(gNaclPPInstance,
             pp::Size(device->hidden->ow, device->hidden->oh), false);
         assert(device->hidden->context2d != NULL);
 
         printf("binding graphics\n");
-        if (!global_pp_instance->BindGraphics(*device->hidden->context2d)) {
+        if (!gNaclPPInstance->BindGraphics(*device->hidden->context2d)) {
           printf("***** Couldn't bind the device context *****\n");
         }
 
         printf("allocating imagedata\n");
-        device->hidden->image_data = new pp::ImageData(global_pp_instance,
+        device->hidden->image_data = new pp::ImageData(gNaclPPInstance,
             PP_IMAGEDATAFORMAT_BGRA_PREMUL,
             device->hidden->context2d->size(),
             false);
@@ -282,21 +284,6 @@ static void flip(_THIS) {
 
   SDL_memcpy(_this->hidden->image_data->data(), _this->hidden->buffer,
 	     _this->hidden->w * _this->hidden->h * _this->hidden->bpp / 8);
-
-  // uint32_t* pixel_bits = static_cast<uint32_t*>(_this->hidden->image_data->data());
-  // assert(pixel_bits);
-  // // printf("blitting to %p\n", pixel_bits);
-  // for (int y = 0; y < _this->hidden->h; ++y) {
-  //   // printf("y = %d\n", y);
-  //   unsigned char* pixels = ((unsigned char*)_this->hidden->buffer) + _this->hidden->pitch * y;
-  //   for (int x = 0; x < _this->hidden->w; ++x) {
-  //     SDL_Color color = _this->hidden->palette[pixels[x]];
-  //     uint32_t val = 0xFF000000 + ((uint32_t)color.r << 16) + ((uint32_t)color.g << 8) +
-  // 	((uint32_t)color.b);
-  //     pixel_bits[_this->hidden->ow * y + x] = val; // use stride() ?
-  //   }
-  // }
-  // flush(_this);
 
   SDL_UnlockMutex(_this->hidden->image_data_mu);
 

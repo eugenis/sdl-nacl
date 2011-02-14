@@ -64,15 +64,6 @@ void SDL_NACL_PushEvent(const PP_InputEvent* ppevent) {
   case PP_INPUTEVENT_TYPE_CHAR:
     printf("char\n");
     break;
-  // case PP_INPUTEVENT_TYPE_MINIMIZE:
-  //   printf("minimize\n");
-  //   break;
-  // case PP_INPUTEVENT_TYPE_FOCUS:
-  //   printf("focus\n");
-  //   break;
-  // case PP_INPUTEVENT_TYPE_DEVICE:
-  //   printf("device\n");
-  //   break;
   default:
     printf("unknown\n");
   }

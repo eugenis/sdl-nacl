@@ -7,12 +7,10 @@
 extern "C" {
 #endif
 
-// #include <ppapi/cpp/instance.h>
-// #include <nacl/nacl_npapi.h>
-// #include <nacl/npapi_extensions.h>
+#include <ppapi/c/ppb_instance.h>
 #include <ppapi/c/pp_input_event.h>
 
-void SDL_NACL_SetInstance(void* instance);
+void SDL_NACL_SetInstance(PP_Instance instance, int width, int height);
 void SDL_NACL_PushEvent(const PP_InputEvent* ppevent);
 
 /* Ends C function definitions when using C++ */
