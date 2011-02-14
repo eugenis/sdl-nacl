@@ -1,24 +1,3 @@
-/*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
-
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
-
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
-*/
 #include "SDL_config.h"
 
 extern "C" {
@@ -28,52 +7,18 @@ extern "C" {
 #include "../../events/SDL_events_c.h"
 }
 
-#include "SDL_naclvideo.h"
 #include "SDL_naclevents_c.h"
 #include "eventqueue.h"
 
 static EventQueue event_queue;
 
-
 void SDL_NACL_PushEvent(const PP_InputEvent* ppevent) {
-
-  switch (ppevent->type) {
-  case PP_INPUTEVENT_TYPE_MOUSEDOWN:
-    printf("mouse down\n");
-    break;
-  case PP_INPUTEVENT_TYPE_MOUSEUP:
-    printf("mouse up\n");
-    break;
-  case PP_INPUTEVENT_TYPE_MOUSEMOVE:
-    printf("mouse move\n");
-    break;
-  case PP_INPUTEVENT_TYPE_MOUSEENTER:
-    printf("mouse enter\n");
-    break;
-  case PP_INPUTEVENT_TYPE_MOUSELEAVE:
-    printf("mouse leave\n");
-    break;
-  case PP_INPUTEVENT_TYPE_MOUSEWHEEL:
-    printf("mouse wheel\n");
-    break;
-  case PP_INPUTEVENT_TYPE_RAWKEYDOWN:
-  case PP_INPUTEVENT_TYPE_KEYDOWN:
-  case PP_INPUTEVENT_TYPE_KEYUP:
-    printf("key\n");
-    break;
-  case PP_INPUTEVENT_TYPE_CHAR:
-    printf("char\n");
-    break;
-  default:
-    printf("unknown\n");
-  }
-
   PP_InputEvent* copy = (PP_InputEvent*)malloc(sizeof(PP_InputEvent));
   memcpy(copy, ppevent, sizeof(PP_InputEvent));
   event_queue.PushEvent(copy);
 }
 
-static Uint8 translateButton(/*NPMouseButtons*/ int32_t button) {
+static Uint8 translateButton(int32_t button) {
   switch (button) {
   case PP_INPUTEVENT_MOUSEBUTTON_LEFT:
     return SDL_BUTTON_LEFT;
@@ -88,7 +33,7 @@ static Uint8 translateButton(/*NPMouseButtons*/ int32_t button) {
 }
 
 static SDLKey translateKey(uint32_t code) {
-  printf("code: %u '%c'\n", code, code);
+  // TODO: Some keys are missing from this list.
   switch (code) {
     case 'A':
       return SDLK_a;
