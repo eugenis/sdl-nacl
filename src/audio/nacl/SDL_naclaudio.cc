@@ -24,9 +24,6 @@ const uint32_t kSampleFrameCount = 4096u;
 
 /* Audio driver functions */
 static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec);
-static void NACLAUD_WaitAudio(_THIS);
-static void NACLAUD_PlayAudio(_THIS);
-static Uint8 *NACLAUD_GetAudioBuf(_THIS);
 static void NACLAUD_CloseAudio(_THIS);
 
 static void AudioCallback(void* samples, size_t buffer_size, void* data);
@@ -90,9 +87,6 @@ static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
 
 	/* Set the function pointers */
 	_this->OpenAudio = NACLAUD_OpenAudio;
-	_this->WaitAudio = NACLAUD_WaitAudio;
-	_this->PlayAudio = NACLAUD_PlayAudio;
-	_this->GetAudioBuf = NACLAUD_GetAudioBuf;
 	_this->CloseAudio = NACLAUD_CloseAudio;
 
 	_this->free = NACLAUD_DeleteDevice;
@@ -105,20 +99,6 @@ AudioBootStrap NACLAUD_bootstrap = {
 	NACLAUD_Available, NACLAUD_CreateDevice
 };
 
-/* This function waits until it is possible to write a full sound buffer */
-static void NACLAUD_WaitAudio(_THIS)
-{
-  assert(0);
-}
-
-static void NACLAUD_PlayAudio(_THIS)
-{
-  assert(0);
-}
-
-static Uint8 *NACLAUD_GetAudioBuf(_THIS)
-{
-}
 
 static void NACLAUD_CloseAudio(_THIS)
 {
@@ -128,33 +108,6 @@ static void NACLAUD_CloseAudio(_THIS)
 static void AudioCallback(void* samples, size_t buffer_size, void* data) {
   SDL_AudioDevice* _this = reinterpret_cast<SDL_AudioDevice*>(data);
   printf("============== audio callback\n");
-
-
-  // const double frequency = 440;
-  // const double delta = kTwoPi * frequency / PP_AUDIOSAMPLERATE_44100;
-  // const int16_t max_int16 = std::numeric_limits<int16_t>::max();
-
-  //   int16_t* buff = reinterpret_cast<int16_t*>(samples);
-
-  //   // Make sure we can't write outside the buffer.
-  //   assert(buffer_size >= (sizeof(*buff) * kChannels *
-  //           _this->hidden->sample_frame_count));
-
-  //   double theta = 0.;
-
-  //   for (size_t sample_i = 0;
-  //        sample_i < _this->hidden->sample_frame_count;
-  //        ++sample_i, theta += delta) {
-  //     // Keep theta_ from going beyond 2*Pi.
-  //     if (theta > kTwoPi) {
-  //       theta -= kTwoPi;
-  //     }
-  //     double sin_value(std::sin(theta));
-  //     int16_t scaled_value = static_cast<int16_t>(sin_value * max_int16);
-  //     for (size_t channel = 0; channel < kChannels; ++channel) {
-  //       *buff++ = scaled_value;
-  //     }
-  //   }
 
   // TODO: lock!
   if (_this->spec.callback) {
