@@ -53,6 +53,8 @@ static void illegal_instruction(int sig)
 }
 #endif /* HAVE_SETJMP */
 
+
+#if SDL_ASSEMBLY_ROUTINES
 static __inline__ int CPU_haveCPUID(void)
 {
 	int has_CPUID = 0;
@@ -280,6 +282,15 @@ done:
 	return features;
 }
 
+#else // SDL_ASSEMBLY_ROUTINES
+
+static __inline__ int CPU_haveCPUID(void) { return 0; }
+static __inline__ int CPU_getCPUIDFeaturesExt(void) { return 0; }
+static __inline__ int CPU_getCPUIDFeatures(void) { return 0; }
+
+#endif // SDL_ASSEMBLY_ROUTINES
+
+
 static __inline__ int CPU_haveRDTSC(void)
 {
 	if ( CPU_haveCPUID() ) {
@@ -365,8 +376,6 @@ static Uint32 SDL_CPUFeatures = 0xFFFFFFFF;
 
 static Uint32 SDL_GetCPUFeatures(void)
 {
-	return SDL_CPUFeatures = 0;
-	// NaCl does not like the assembly in the CPU_have*.
 	if ( SDL_CPUFeatures == 0xFFFFFFFF ) {
 		SDL_CPUFeatures = 0;
 		if ( CPU_haveRDTSC() ) {
