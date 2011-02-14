@@ -23,7 +23,6 @@ struct SDL_PrivateVideoData {
   int w, h;
   int pitch;
   void *buffer;
-  SDL_Color* palette;
 
   SDL_mutex* image_data_mu;
   int ow, oh; // plugin output dimensions

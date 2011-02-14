@@ -38,7 +38,6 @@ static void flush(void* data, int32_t unused);
 static int NACL_VideoInit(_THIS, SDL_PixelFormat *vformat);
 static SDL_Rect **NACL_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags);
 static SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current, int width, int height, int bpp, Uint32 flags);
-static int NACL_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors);
 static void NACL_VideoQuit(_THIS);
 
 /* etc. */
@@ -104,7 +103,6 @@ static SDL_VideoDevice *NACL_CreateDevice(int devindex)
 	device->VideoInit = NACL_VideoInit;
 	device->ListModes = NACL_ListModes;
 	device->SetVideoMode = NACL_SetVideoMode;
-	device->SetColors = NACL_SetColors;
 	device->UpdateRects = NACL_UpdateRects;
 	device->VideoQuit = NACL_VideoQuit;
 	device->InitOSKeymap = NACL_InitOSKeymap;
@@ -145,7 +143,6 @@ SDL_Rect **NACL_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags)
 SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current,
 				int width, int height, int bpp, Uint32 flags)
 {
-  printf("SetVideoMode: %dx%dx%d, flags %u\n", width, height, bpp, (unsigned)flags);
 	if ( _this->hidden->buffer ) {
 		SDL_free( _this->hidden->buffer );
 	}
@@ -160,20 +157,7 @@ SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current,
 		return(NULL);
 	}
 
-	// if (bpp == 8) {
-	//   _this->hidden->palette = (SDL_Color*)SDL_malloc(256 * sizeof(SDL_Color));
-	//   if ( ! _this->hidden->palette ) {
-	//     SDL_SetError("Couldn't allocate palette for requested 8-bit mode");
-	//     return(NULL);
-	//   }
-	// }
-
-/* 	printf("Setting mode %dx%d\n", width, height); */
-
 	SDL_memset(_this->hidden->buffer, 0, width * height * (bpp / 8));
-	// if (_this->hidden->palette) {
-	//   SDL_memset(_this->hidden->palette, 0, 256 * sizeof(SDL_Color));
-	// }
 
 	/* Allocate the new pixel format for the screen */
 	if ( ! SDL_ReallocFormat(current, bpp, 0xFF0000, 0xFF00, 0xFF, 0xFF000000) ) {
@@ -190,8 +174,6 @@ SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current,
 	_this->hidden->h = current->h = height;
 	_this->hidden->pitch = current->pitch = current->w * (bpp / 8);
 	current->pixels = _this->hidden->buffer;
-
-
 
 	/* We're done */
 	return(current);
@@ -231,16 +213,6 @@ static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
   flip(_this);
 }
 
-int NACL_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors)
-{
-  int i;
-  assert(_this->hidden->bpp == 8);
-  assert(_this->hidden->palette);
-  for (i = 0; i < ncolors; ++i)
-    _this->hidden->palette[firstcolor + i] = colors[i];
-  return(1);
-}
-
 /* Note:  If we are terminated, this could be called in the middle of
    another SDL video routine -- notably UpdateRects.
 */
@@ -251,6 +223,7 @@ void NACL_VideoQuit(_THIS)
 		SDL_free(_this->screen->pixels);
 		_this->screen->pixels = NULL;
 	}
-        // TODO(eugenis): free all the PP stuff
+        delete _this->hidden->context2d;
+        delete _this->hidden->image_data;
 }
 } // extern "C"
