@@ -41,28 +41,14 @@ static SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current, int width, in
 static int NACL_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors);
 static void NACL_VideoQuit(_THIS);
 
-/* Hardware surface functions */
-static int NACL_AllocHWSurface(_THIS, SDL_Surface *surface);
-static int NACL_LockHWSurface(_THIS, SDL_Surface *surface);
-static void NACL_UnlockHWSurface(_THIS, SDL_Surface *surface);
-static void NACL_FreeHWSurface(_THIS, SDL_Surface *surface);
-
 /* etc. */
-static void NACL_SetCaption(_THIS, const char* title, const char* icon);
 static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
 /* NACL driver bootstrap functions */
 
 static int NACL_Available(void)
 {
-  const char *envr = SDL_getenv("SDL_VIDEODRIVER");
-  // Available if NPP is set and SDL_VIDEODRIVER is either unset, empty, or "nacl".
-  if (gNaclPPInstance &&
-      (!envr || !*envr || SDL_strcmp(envr, NACLVID_DRIVER_NAME) == 0)) {
-    printf("nacl video is available\n");
-    return 1;
-  }
-  return 0;
+  return !!gNaclPPInstance;
 }
 
 static void NACL_DeleteDevice(SDL_VideoDevice *device)
@@ -77,7 +63,6 @@ static SDL_VideoDevice *NACL_CreateDevice(int devindex)
 
 	assert(gNaclPPInstance);
 
-	printf("Creating a NaCl device\n");
 	/* Initialize all variables that we clean on shutdown */
 	device = (SDL_VideoDevice *)SDL_malloc(sizeof(SDL_VideoDevice));
 	if ( device ) {
@@ -99,50 +84,29 @@ static SDL_VideoDevice *NACL_CreateDevice(int devindex)
         device->hidden->ow = gNaclVideoWidth;
         device->hidden->oh = gNaclVideoHeight;
 
-        printf("initialize 2d graphics... (instance %p)\n", (void*)gNaclPPInstance);
         if (device->hidden->context2d)
           delete device->hidden->context2d;
         device->hidden->context2d = new pp::Graphics2D(gNaclPPInstance,
             pp::Size(device->hidden->ow, device->hidden->oh), false);
         assert(device->hidden->context2d != NULL);
 
-        printf("binding graphics\n");
         if (!gNaclPPInstance->BindGraphics(*device->hidden->context2d)) {
           printf("***** Couldn't bind the device context *****\n");
         }
 
-        printf("allocating imagedata\n");
         device->hidden->image_data = new pp::ImageData(gNaclPPInstance,
             PP_IMAGEDATAFORMAT_BGRA_PREMUL,
             device->hidden->context2d->size(),
             false);
         assert(device->hidden->image_data != NULL);
 
-        printf("PP magic successful\n");
-
-
 	/* Set the function pointers */
 	device->VideoInit = NACL_VideoInit;
 	device->ListModes = NACL_ListModes;
 	device->SetVideoMode = NACL_SetVideoMode;
-	device->CreateYUVOverlay = NULL;
 	device->SetColors = NACL_SetColors;
 	device->UpdateRects = NACL_UpdateRects;
 	device->VideoQuit = NACL_VideoQuit;
-	device->AllocHWSurface = NACL_AllocHWSurface;
-	device->CheckHWBlit = NULL;
-	device->FillHWRect = NULL;
-	device->SetHWColorKey = NULL;
-	device->SetHWAlpha = NULL;
-	device->LockHWSurface = NACL_LockHWSurface;
-	device->UnlockHWSurface = NACL_UnlockHWSurface;
-	device->FlipHWSurface = NULL;
-	device->FreeHWSurface = NACL_FreeHWSurface;
-	device->SetCaption = NACL_SetCaption;
-	device->SetIcon = NULL;
-	device->IconifyWindow = NULL;
-	device->GrabInput = NULL;
-	device->GetWMInfo = NULL;
 	device->InitOSKeymap = NACL_InitOSKeymap;
 	device->PumpEvents = NACL_PumpEvents;
 
@@ -233,43 +197,14 @@ SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current,
 	return(current);
 }
 
-/* We don't actually allow hardware surfaces other than the main one */
-static int NACL_AllocHWSurface(_THIS, SDL_Surface *surface)
-{
-	return(-1);
-}
-static void NACL_FreeHWSurface(_THIS, SDL_Surface *surface)
-{
-	return;
-}
-
-/* We need to wait for vertical retrace on page flipped displays */
-static int NACL_LockHWSurface(_THIS, SDL_Surface *surface)
-{
-	return(0);
-}
-
-static void NACL_UnlockHWSurface(_THIS, SDL_Surface *surface)
-{
-	return;
-}
-
 
 static void flush(void* data, int32_t unused) {
   SDL_VideoDevice* _this = reinterpret_cast<SDL_VideoDevice*>(data);
 
   SDL_LockMutex(_this->hidden->image_data_mu);
-
-  // fprintf(stderr, "paint\n");
   _this->hidden->context2d->PaintImageData(*_this->hidden->image_data, pp::Point());
-
-  // fprintf(stderr, "flush\n");
   _this->hidden->context2d->Flush(pp::CompletionCallback(&flush, _this));
-
   SDL_UnlockMutex(_this->hidden->image_data_mu);
-}
-
-static void NACL_SetCaption(_THIS, const char* title, const char* icon) {
 }
 
 static void flip(_THIS) {
