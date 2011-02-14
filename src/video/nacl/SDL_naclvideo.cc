@@ -4,7 +4,6 @@
 
 #include "SDL_naclvideo.h"
 #include "SDL_naclevents_c.h"
-#include "SDL_naclmouse_c.h"
 
 #include <ppapi/cpp/instance.h>
 #include <ppapi/cpp/graphics_2d.h>

@@ -174,7 +174,6 @@ int SDL_VideoInit (const char *driver_name, Uint32 flags)
 		SDL_VideoQuit();
 	}
 
-	printf("video init: %s\n", driver_name);
 	/* Select the proper video driver */
 	index = 0;
 	video = NULL;
@@ -194,12 +193,9 @@ int SDL_VideoInit (const char *driver_name, Uint32 flags)
 		}
 	} else {
 		for ( i=0; bootstrap[i]; ++i ) {
-		  printf("boot %d\n", i);
 			if ( bootstrap[i]->available() ) {
-			  printf("available\n");
 				video = bootstrap[i]->create(index);
 				if ( video != NULL ) {
-				  printf("got video\n");
 					break;
 				}
 			}
@@ -621,7 +617,6 @@ SDL_Surface * SDL_SetVideoMode (int width, int height, int bpp, Uint32 flags)
 	video_h = height;
 	video_bpp = bpp;
 	if ( ! SDL_GetVideoMode(&video_w, &video_h, &video_bpp, flags) ) {
-	  printf("get video mode: %d %d %d\n", video_w, video_h, video_bpp);
 		return(NULL);
 	}
 
