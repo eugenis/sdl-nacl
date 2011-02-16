@@ -20,15 +20,15 @@ void SDL_NACL_PushEvent(const PP_InputEvent* ppevent) {
 
 static Uint8 translateButton(int32_t button) {
   switch (button) {
-  case PP_INPUTEVENT_MOUSEBUTTON_LEFT:
-    return SDL_BUTTON_LEFT;
-  case PP_INPUTEVENT_MOUSEBUTTON_MIDDLE:
-    return SDL_BUTTON_MIDDLE;
-  case PP_INPUTEVENT_MOUSEBUTTON_RIGHT:
-    return SDL_BUTTON_RIGHT;
-  case PP_INPUTEVENT_MOUSEBUTTON_NONE:
-  default:
-   return 0;
+    case PP_INPUTEVENT_MOUSEBUTTON_LEFT:
+      return SDL_BUTTON_LEFT;
+    case PP_INPUTEVENT_MOUSEBUTTON_MIDDLE:
+      return SDL_BUTTON_MIDDLE;
+    case PP_INPUTEVENT_MOUSEBUTTON_RIGHT:
+      return SDL_BUTTON_RIGHT;
+    case PP_INPUTEVENT_MOUSEBUTTON_NONE:
+    default:
+      return 0;
   }
 }
 
@@ -84,7 +84,7 @@ void NACL_PumpEvents(_THIS)
 
 void NACL_InitOSKeymap(_THIS)
 {
-	/* do nothing. */
+  /* do nothing. */
 }
 
 /* end of SDL_naclevents.c ... */

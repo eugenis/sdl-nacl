@@ -51,131 +51,131 @@ static int NACL_Available(void)
 
 static void NACL_DeleteDevice(SDL_VideoDevice *device)
 {
-	SDL_free(device->hidden);
-	SDL_free(device);
+  SDL_free(device->hidden);
+  SDL_free(device);
 }
 
 static SDL_VideoDevice *NACL_CreateDevice(int devindex)
 {
-	SDL_VideoDevice *device;
+  SDL_VideoDevice *device;
 
-	assert(gNaclPPInstance);
+  assert(gNaclPPInstance);
 
-	/* Initialize all variables that we clean on shutdown */
-	device = (SDL_VideoDevice *)SDL_malloc(sizeof(SDL_VideoDevice));
-	if ( device ) {
-		SDL_memset(device, 0, (sizeof *device));
-		device->hidden = (struct SDL_PrivateVideoData *)
-				SDL_malloc((sizeof *device->hidden));
-	}
-	if ( (device == NULL) || (device->hidden == NULL) ) {
-		SDL_OutOfMemory();
-		if ( device ) {
-			SDL_free(device);
-		}
-		return(0);
-	}
-	SDL_memset(device->hidden, 0, (sizeof *device->hidden));
+  /* Initialize all variables that we clean on shutdown */
+  device = (SDL_VideoDevice *)SDL_malloc(sizeof(SDL_VideoDevice));
+  if ( device ) {
+    SDL_memset(device, 0, (sizeof *device));
+    device->hidden = (struct SDL_PrivateVideoData *)
+        SDL_malloc((sizeof *device->hidden));
+  }
+  if ( (device == NULL) || (device->hidden == NULL) ) {
+    SDL_OutOfMemory();
+    if ( device ) {
+      SDL_free(device);
+    }
+    return(0);
+  }
+  SDL_memset(device->hidden, 0, (sizeof *device->hidden));
 
-        device->hidden->image_data_mu = SDL_CreateMutex();
+  device->hidden->image_data_mu = SDL_CreateMutex();
 
-        device->hidden->ow = gNaclVideoWidth;
-        device->hidden->oh = gNaclVideoHeight;
+  device->hidden->ow = gNaclVideoWidth;
+  device->hidden->oh = gNaclVideoHeight;
 
-        if (device->hidden->context2d)
-          delete device->hidden->context2d;
-        device->hidden->context2d = new pp::Graphics2D(gNaclPPInstance,
-            pp::Size(device->hidden->ow, device->hidden->oh), false);
-        assert(device->hidden->context2d != NULL);
+  if (device->hidden->context2d)
+    delete device->hidden->context2d;
+  device->hidden->context2d = new pp::Graphics2D(gNaclPPInstance,
+      pp::Size(device->hidden->ow, device->hidden->oh), false);
+  assert(device->hidden->context2d != NULL);
 
-        if (!gNaclPPInstance->BindGraphics(*device->hidden->context2d)) {
-          printf("***** Couldn't bind the device context *****\n");
-        }
+  if (!gNaclPPInstance->BindGraphics(*device->hidden->context2d)) {
+    printf("***** Couldn't bind the device context *****\n");
+  }
 
-        device->hidden->image_data = new pp::ImageData(gNaclPPInstance,
-            PP_IMAGEDATAFORMAT_BGRA_PREMUL,
-            device->hidden->context2d->size(),
-            false);
-        assert(device->hidden->image_data != NULL);
+  device->hidden->image_data = new pp::ImageData(gNaclPPInstance,
+      PP_IMAGEDATAFORMAT_BGRA_PREMUL,
+      device->hidden->context2d->size(),
+      false);
+  assert(device->hidden->image_data != NULL);
 
-	/* Set the function pointers */
-	device->VideoInit = NACL_VideoInit;
-	device->ListModes = NACL_ListModes;
-	device->SetVideoMode = NACL_SetVideoMode;
-	device->UpdateRects = NACL_UpdateRects;
-	device->VideoQuit = NACL_VideoQuit;
-	device->InitOSKeymap = NACL_InitOSKeymap;
-	device->PumpEvents = NACL_PumpEvents;
+  /* Set the function pointers */
+  device->VideoInit = NACL_VideoInit;
+  device->ListModes = NACL_ListModes;
+  device->SetVideoMode = NACL_SetVideoMode;
+  device->UpdateRects = NACL_UpdateRects;
+  device->VideoQuit = NACL_VideoQuit;
+  device->InitOSKeymap = NACL_InitOSKeymap;
+  device->PumpEvents = NACL_PumpEvents;
 
-	device->free = NACL_DeleteDevice;
+  device->free = NACL_DeleteDevice;
 
-        flush(device, 0);
+  flush(device, 0);
 
-	return device;
+  return device;
 }
 
 VideoBootStrap NACL_bootstrap = {
-	NACLVID_DRIVER_NAME, "SDL Native Client video driver",
-	NACL_Available, NACL_CreateDevice
+  NACLVID_DRIVER_NAME, "SDL Native Client video driver",
+  NACL_Available, NACL_CreateDevice
 };
 
 
 int NACL_VideoInit(_THIS, SDL_PixelFormat *vformat)
 {
-	fprintf(stderr, "CONGRATULATIONS: You are using the SDL nacl video driver!\n");
+  fprintf(stderr, "CONGRATULATIONS: You are using the SDL nacl video driver!\n");
 
-	/* Determine the screen depth (use default 8-bit depth) */
-	/* we change this during the SDL_SetVideoMode implementation... */
-	vformat->BitsPerPixel = 8;
-	vformat->BytesPerPixel = 1;
+  /* Determine the screen depth (use default 8-bit depth) */
+  /* we change this during the SDL_SetVideoMode implementation... */
+  vformat->BitsPerPixel = 8;
+  vformat->BytesPerPixel = 1;
 
-	/* We're done! */
-	return(0);
+  /* We're done! */
+  return(0);
 }
 
 SDL_Rect **NACL_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags)
 {
-   	 return (SDL_Rect **) -1;
+  return (SDL_Rect **) -1;
 }
 
 
 SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current,
-				int width, int height, int bpp, Uint32 flags)
+    int width, int height, int bpp, Uint32 flags)
 {
-	if ( _this->hidden->buffer ) {
-		SDL_free( _this->hidden->buffer );
-	}
+  if ( _this->hidden->buffer ) {
+    SDL_free( _this->hidden->buffer );
+  }
 
-	bpp = 32; // Let SDL handle pixel format conversion.
-	width = _this->hidden->ow;
-	height = _this->hidden->oh;
+  bpp = 32; // Let SDL handle pixel format conversion.
+  width = _this->hidden->ow;
+  height = _this->hidden->oh;
 
-	_this->hidden->buffer = SDL_malloc(width * height * (bpp / 8));
-	if ( ! _this->hidden->buffer ) {
-		SDL_SetError("Couldn't allocate buffer for requested mode");
-		return(NULL);
-	}
+  _this->hidden->buffer = SDL_malloc(width * height * (bpp / 8));
+  if ( ! _this->hidden->buffer ) {
+    SDL_SetError("Couldn't allocate buffer for requested mode");
+    return(NULL);
+  }
 
-	SDL_memset(_this->hidden->buffer, 0, width * height * (bpp / 8));
+  SDL_memset(_this->hidden->buffer, 0, width * height * (bpp / 8));
 
-	/* Allocate the new pixel format for the screen */
-	if ( ! SDL_ReallocFormat(current, bpp, 0xFF0000, 0xFF00, 0xFF, 0xFF000000) ) {
-		SDL_free(_this->hidden->buffer);
-		_this->hidden->buffer = NULL;
-		SDL_SetError("Couldn't allocate new pixel format for requested mode");
-		return(NULL);
-	}
+  /* Allocate the new pixel format for the screen */
+  if ( ! SDL_ReallocFormat(current, bpp, 0xFF0000, 0xFF00, 0xFF, 0xFF000000) ) {
+    SDL_free(_this->hidden->buffer);
+    _this->hidden->buffer = NULL;
+    SDL_SetError("Couldn't allocate new pixel format for requested mode");
+    return(NULL);
+  }
 
-	/* Set up the new mode framebuffer */
-	current->flags = flags & SDL_FULLSCREEN;
-	_this->hidden->bpp = bpp;
-	_this->hidden->w = current->w = width;
-	_this->hidden->h = current->h = height;
-	_this->hidden->pitch = current->pitch = current->w * (bpp / 8);
-	current->pixels = _this->hidden->buffer;
+  /* Set up the new mode framebuffer */
+  current->flags = flags & SDL_FULLSCREEN;
+  _this->hidden->bpp = bpp;
+  _this->hidden->w = current->w = width;
+  _this->hidden->h = current->h = height;
+  _this->hidden->pitch = current->pitch = current->w * (bpp / 8);
+  current->pixels = _this->hidden->buffer;
 
-	/* We're done */
-	return(current);
+  /* We're done */
+  return(current);
 }
 
 
@@ -199,7 +199,7 @@ static void flip(_THIS) {
 
 
   SDL_memcpy(_this->hidden->image_data->data(), _this->hidden->buffer,
-	     _this->hidden->w * _this->hidden->h * _this->hidden->bpp / 8);
+      _this->hidden->w * _this->hidden->h * _this->hidden->bpp / 8);
 
   SDL_UnlockMutex(_this->hidden->image_data_mu);
 
@@ -217,12 +217,12 @@ static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 */
 void NACL_VideoQuit(_THIS)
 {
-	if (_this->screen->pixels != NULL)
-	{
-		SDL_free(_this->screen->pixels);
-		_this->screen->pixels = NULL;
-	}
-        delete _this->hidden->context2d;
-        delete _this->hidden->image_data;
+  if (_this->screen->pixels != NULL)
+  {
+    SDL_free(_this->screen->pixels);
+    _this->screen->pixels = NULL;
+  }
+  delete _this->hidden->context2d;
+  delete _this->hidden->image_data;
 }
 } // extern "C"
