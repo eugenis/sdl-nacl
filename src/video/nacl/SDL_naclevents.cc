@@ -34,15 +34,30 @@ static Uint8 translateButton(int32_t button) {
 
 static SDLKey translateKey(uint32_t code) {
   // TODO: Some keys are missing from this list.
+  if (code >= 'A' && code <= 'Z')
+    return (SDLKey)(code - 'A' + SDLK_a);
+  if (code >= SDLK_0 && code <= SDLK_9)
+    return (SDLKey)code;
+  const uint32_t f1_code = 112;
+  if (code >= f1_code && code < f1_code + 12)
+    return (SDLKey)(code - f1_code + SDLK_F1);
   switch (code) {
-    case 'A':
-      return SDLK_a;
-    case 'S':
-      return SDLK_s;
-    case 'D':
-      return SDLK_d;
-    case 'W':
-      return SDLK_w;
+    case SDLK_BACKSPACE:
+      return SDLK_BACKSPACE;
+    case SDLK_TAB:
+      return SDLK_TAB;
+    case SDLK_RETURN:
+      return SDLK_RETURN;
+    case SDLK_PAUSE:
+      return SDLK_PAUSE;
+    case SDLK_ESCAPE:
+      return SDLK_ESCAPE;
+    case 16:
+      return SDLK_LSHIFT;
+    case 17:
+      return SDLK_LCTRL;
+    case 18:
+      return SDLK_LALT;
     case 37:
       return SDLK_LEFT;
     case 38:
