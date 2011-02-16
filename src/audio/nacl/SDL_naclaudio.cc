@@ -117,7 +117,7 @@ static void AudioCallback(void* samples, size_t buffer_size, void* data) {
 
 
 static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec) {
-  // We don't give a damn what the user wants.
+  // We don't care what the user wants.
   spec->freq = 44100;
   spec->format = AUDIO_S16LSB;
   spec->channels = 2;
