@@ -56,8 +56,7 @@ static SDLKey translateKey(uint32_t code) {
   }
 }
 
-void NACL_PumpEvents(_THIS)
-{
+void NACL_PumpEvents(_THIS) {
   PP_InputEvent* event;
   SDL_keysym keysym;
   while (event = event_queue.PopEvent()) {
@@ -82,8 +81,7 @@ void NACL_PumpEvents(_THIS)
   }
 }
 
-void NACL_InitOSKeymap(_THIS)
-{
+void NACL_InitOSKeymap(_THIS) {
   /* do nothing. */
 }
 

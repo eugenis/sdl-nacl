@@ -30,18 +30,15 @@ static void AudioCallback(void* samples, size_t buffer_size, void* data);
 
 
 /* Audio driver bootstrap functions */
-static int NACLAUD_Available(void)
-{
+static int NACLAUD_Available(void) {
   return !!gNaclPPInstance;
 }
 
-static void NACLAUD_DeleteDevice(SDL_AudioDevice *device)
-{
+static void NACLAUD_DeleteDevice(SDL_AudioDevice *device) {
   // We should stop playback here, but it can only be done on the main thread :(
 }
 
-static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
-{
+static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex) {
   SDL_AudioDevice *_this;
 
   /* Initialize all variables that we clean on shutdown */
@@ -60,10 +57,11 @@ static SDL_AudioDevice *NACLAUD_CreateDevice(int devindex)
   }
   SDL_memset(_this->hidden, 0, (sizeof *_this->hidden));
 
-  _this->hidden->mu = SDL_CreateMutex();
+  _this->hidden->mutex = SDL_CreateMutex();
 
   _this->hidden->opened = false;
 
+  // TODO: Move audio device creation to NACLAUD_OpenAudio.
   _this->hidden->sample_frame_count =
       pp::AudioConfig::RecommendSampleFrameCount(PP_AUDIOSAMPLERATE_44100,
           kSampleFrameCount);
@@ -92,19 +90,17 @@ AudioBootStrap NACLAUD_bootstrap = {
 };
 
 
-static void NACLAUD_CloseAudio(_THIS)
-{
-  SDL_LockMutex(_this->hidden->mu);
+static void NACLAUD_CloseAudio(_THIS) {
+  SDL_LockMutex(_this->hidden->mutex);
   _this->hidden->opened = 0;
-  SDL_UnlockMutex(_this->hidden->mu);
+  SDL_UnlockMutex(_this->hidden->mutex);
 }
 
 
 static void AudioCallback(void* samples, size_t buffer_size, void* data) {
   SDL_AudioDevice* _this = reinterpret_cast<SDL_AudioDevice*>(data);
 
-  // TODO: lock!
-  SDL_LockMutex(_this->hidden->mu);
+  SDL_LockMutex(_this->hidden->mutex);
   if (_this->hidden->opened) {
     SDL_memset(samples, _this->spec.silence, buffer_size);
     SDL_LockMutex(_this->mixer_lock);
@@ -114,23 +110,22 @@ static void AudioCallback(void* samples, size_t buffer_size, void* data) {
   } else {
     SDL_memset(samples, 0, buffer_size);
   }
-  SDL_UnlockMutex(_this->hidden->mu);
+  SDL_UnlockMutex(_this->hidden->mutex);
 
   return;
 }
 
 
-static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
-{
+static int NACLAUD_OpenAudio(_THIS, SDL_AudioSpec *spec) {
   // We don't give a damn what the user wants.
   spec->freq = 44100;
   spec->format = AUDIO_S16LSB;
   spec->channels = 2;
   spec->samples = _this->hidden->sample_frame_count;
 
-  SDL_LockMutex(_this->hidden->mu);
+  SDL_LockMutex(_this->hidden->mutex);
   _this->hidden->opened = 1;
-  SDL_UnlockMutex(_this->hidden->mu);
+  SDL_UnlockMutex(_this->hidden->mutex);
 
   // Do not create an audio thread.
   return 1;

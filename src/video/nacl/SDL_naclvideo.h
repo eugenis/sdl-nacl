@@ -24,7 +24,7 @@ struct SDL_PrivateVideoData {
   int pitch;
   void *buffer;
 
-  SDL_mutex* image_data_mu;
+  SDL_mutex* image_data_mutex;
   int ow, oh; // plugin output dimensions
   pp::ImageData* image_data;
   pp::Graphics2D* context2d;  // The PINPAPI 2D drawing context.

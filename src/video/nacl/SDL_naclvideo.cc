@@ -38,25 +38,19 @@ static int NACL_VideoInit(_THIS, SDL_PixelFormat *vformat);
 static SDL_Rect **NACL_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags);
 static SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current, int width, int height, int bpp, Uint32 flags);
 static void NACL_VideoQuit(_THIS);
-
-/* etc. */
 static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
-/* NACL driver bootstrap functions */
 
-static int NACL_Available(void)
-{
+static int NACL_Available(void) {
   return !!gNaclPPInstance;
 }
 
-static void NACL_DeleteDevice(SDL_VideoDevice *device)
-{
+static void NACL_DeleteDevice(SDL_VideoDevice *device) {
   SDL_free(device->hidden);
   SDL_free(device);
 }
 
-static SDL_VideoDevice *NACL_CreateDevice(int devindex)
-{
+static SDL_VideoDevice *NACL_CreateDevice(int devindex) {
   SDL_VideoDevice *device;
 
   assert(gNaclPPInstance);
@@ -77,7 +71,7 @@ static SDL_VideoDevice *NACL_CreateDevice(int devindex)
   }
   SDL_memset(device->hidden, 0, (sizeof *device->hidden));
 
-  device->hidden->image_data_mu = SDL_CreateMutex();
+  device->hidden->image_data_mutex = SDL_CreateMutex();
 
   device->hidden->ow = gNaclVideoWidth;
   device->hidden->oh = gNaclVideoHeight;
@@ -120,8 +114,7 @@ VideoBootStrap NACL_bootstrap = {
 };
 
 
-int NACL_VideoInit(_THIS, SDL_PixelFormat *vformat)
-{
+int NACL_VideoInit(_THIS, SDL_PixelFormat *vformat) {
   fprintf(stderr, "CONGRATULATIONS: You are using the SDL nacl video driver!\n");
 
   /* Determine the screen depth (use default 8-bit depth) */
@@ -133,15 +126,13 @@ int NACL_VideoInit(_THIS, SDL_PixelFormat *vformat)
   return(0);
 }
 
-SDL_Rect **NACL_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags)
-{
+SDL_Rect **NACL_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags) {
   return (SDL_Rect **) -1;
 }
 
 
 SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current,
-    int width, int height, int bpp, Uint32 flags)
-{
+    int width, int height, int bpp, Uint32 flags) {
   if ( _this->hidden->buffer ) {
     SDL_free( _this->hidden->buffer );
   }
@@ -182,10 +173,10 @@ SDL_Surface *NACL_SetVideoMode(_THIS, SDL_Surface *current,
 static void flush(void* data, int32_t unused) {
   SDL_VideoDevice* _this = reinterpret_cast<SDL_VideoDevice*>(data);
 
-  SDL_LockMutex(_this->hidden->image_data_mu);
+  SDL_LockMutex(_this->hidden->image_data_mutex);
   _this->hidden->context2d->PaintImageData(*_this->hidden->image_data, pp::Point());
   _this->hidden->context2d->Flush(pp::CompletionCallback(&flush, _this));
-  SDL_UnlockMutex(_this->hidden->image_data_mu);
+  SDL_UnlockMutex(_this->hidden->image_data_mutex);
 }
 
 static void flip(_THIS) {
@@ -195,18 +186,16 @@ static void flip(_THIS) {
   assert(_this->hidden->w == _this->hidden->ow);
   assert(_this->hidden->h == _this->hidden->oh);
 
-  SDL_LockMutex(_this->hidden->image_data_mu);
-
+  SDL_LockMutex(_this->hidden->image_data_mutex);
 
   SDL_memcpy(_this->hidden->image_data->data(), _this->hidden->buffer,
       _this->hidden->w * _this->hidden->h * _this->hidden->bpp / 8);
 
-  SDL_UnlockMutex(_this->hidden->image_data_mu);
+  SDL_UnlockMutex(_this->hidden->image_data_mutex);
 
 }
 
-static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
-{
+static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects) {
   if (_this->hidden->bpp == 0) // not initialized yet
     return;
   flip(_this);
@@ -215,8 +204,7 @@ static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 /* Note:  If we are terminated, this could be called in the middle of
    another SDL video routine -- notably UpdateRects.
 */
-void NACL_VideoQuit(_THIS)
-{
+void NACL_VideoQuit(_THIS) {
   if (_this->screen->pixels != NULL)
   {
     SDL_free(_this->screen->pixels);

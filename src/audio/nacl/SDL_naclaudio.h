@@ -16,7 +16,7 @@ extern "C" {
 
 struct SDL_PrivateAudioData {
 
-  SDL_mutex* mu;
+  SDL_mutex* mutex;
   // This flag is use to determine when the audio is opened and we can start
   // serving audio data instead of silence. This is needed because current
   // Pepper2 can only be used from the main thread; Therefore, we start the
