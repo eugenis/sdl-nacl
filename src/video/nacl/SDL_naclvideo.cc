@@ -86,6 +86,7 @@ static SDL_VideoDevice *NACL_CreateDevice(int devindex) {
     fprintf(stderr, "***** Couldn't bind the device context *****\n");
   }
 
+  // TODO: convert normal RGBA to premultiplied alpha.
   device->hidden->image_data = new pp::ImageData(gNaclPPInstance,
       PP_IMAGEDATAFORMAT_BGRA_PREMUL,
       device->hidden->context2d->size(),
