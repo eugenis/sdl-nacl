@@ -42,7 +42,7 @@ static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
 
 static int NACL_Available(void) {
-  return !!gNaclPPInstance;
+  return gNaclPPInstance != 0;
 }
 
 static void NACL_DeleteDevice(SDL_VideoDevice *device) {

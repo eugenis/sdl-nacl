@@ -31,7 +31,7 @@ static void AudioCallback(void* samples, size_t buffer_size, void* data);
 
 /* Audio driver bootstrap functions */
 static int NACLAUD_Available(void) {
-  return !!gNaclPPInstance;
+  return gNaclPPInstance != 0;
 }
 
 static void NACLAUD_DeleteDevice(SDL_AudioDevice *device) {
