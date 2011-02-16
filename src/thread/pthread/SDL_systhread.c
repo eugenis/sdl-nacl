@@ -81,12 +81,15 @@ void SDL_SYS_SetupThread(void)
 	int i;
 	sigset_t mask;
 
+        // NativeClient does not yet support signals.
+#ifndef __NACL__
 	/* Mask asynchronous signals for this thread */
-	/* sigemptyset(&mask); */
-	/* for ( i=0; sig_list[i]; ++i ) { */
-	/* 	sigaddset(&mask, sig_list[i]); */
-	/* } */
-	/* pthread_sigmask(SIG_BLOCK, &mask, 0); */
+	sigemptyset(&mask);
+	for ( i=0; sig_list[i]; ++i ) {
+		sigaddset(&mask, sig_list[i]);
+	}
+	pthread_sigmask(SIG_BLOCK, &mask, 0);
+#endif
 
 #ifdef PTHREAD_CANCEL_ASYNCHRONOUS
 	/* Allow ourselves to be asynchronously cancelled */
