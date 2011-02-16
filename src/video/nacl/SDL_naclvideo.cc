@@ -83,7 +83,7 @@ static SDL_VideoDevice *NACL_CreateDevice(int devindex) {
   assert(device->hidden->context2d != NULL);
 
   if (!gNaclPPInstance->BindGraphics(*device->hidden->context2d)) {
-    printf("***** Couldn't bind the device context *****\n");
+    fprintf(stderr, "***** Couldn't bind the device context *****\n");
   }
 
   device->hidden->image_data = new pp::ImageData(gNaclPPInstance,
@@ -180,8 +180,6 @@ static void flush(void* data, int32_t unused) {
 }
 
 static void flip(_THIS) {
-  // printf("flip: h %d w %d bpp %d\n", _this->hidden->h, _this->hidden->w, _this->hidden->bpp);
-  // assert(_this->hidden->bpp == 8);
   assert(_this->hidden->image_data);
   assert(_this->hidden->w == _this->hidden->ow);
   assert(_this->hidden->h == _this->hidden->oh);
