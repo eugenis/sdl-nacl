@@ -81,7 +81,7 @@ void SDL_SYS_SetupThread(void)
 	int i;
 	sigset_t mask;
 
-        // NativeClient does not yet support signals.
+	// NativeClient does not yet support signals.
 #ifndef __NACL__
 	/* Mask asynchronous signals for this thread */
 	sigemptyset(&mask);
