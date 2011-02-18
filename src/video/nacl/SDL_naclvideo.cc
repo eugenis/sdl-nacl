@@ -176,6 +176,7 @@ static void flush(void* data, int32_t unused) {
 
   SDL_LockMutex(_this->hidden->image_data_mutex);
   _this->hidden->context2d->PaintImageData(*_this->hidden->image_data, pp::Point());
+  // TODO: This is a busy loop. Replace with CallOnMainThread with a delay when it is supported.
   _this->hidden->context2d->Flush(pp::CompletionCallback(&flush, _this));
   SDL_UnlockMutex(_this->hidden->image_data_mutex);
 }
@@ -191,7 +192,6 @@ static void flip(_THIS) {
       _this->hidden->w * _this->hidden->h * _this->hidden->bpp / 8);
 
   SDL_UnlockMutex(_this->hidden->image_data_mutex);
-
 }
 
 static void NACL_UpdateRects(_THIS, int numrects, SDL_Rect *rects) {
