@@ -33,7 +33,6 @@ static Uint8 translateButton(int32_t button) {
 }
 
 static SDLKey translateKey(uint32_t code) {
-  // TODO: Some keys are missing from this list.
   if (code >= 'A' && code <= 'Z')
     return (SDLKey)(code - 'A' + SDLK_a);
   if (code >= SDLK_0 && code <= SDLK_9)
@@ -41,6 +40,9 @@ static SDLKey translateKey(uint32_t code) {
   const uint32_t f1_code = 112;
   if (code >= f1_code && code < f1_code + 12)
     return (SDLKey)(code - f1_code + SDLK_F1);
+  const uint32_t kp0_code = 96;
+  if (code >= kp0_code && code < kp0_code + 10)
+    return (SDLKey)(code - kp0_code + SDLK_KP0);
   switch (code) {
     case SDLK_BACKSPACE:
       return SDLK_BACKSPACE;
@@ -66,6 +68,50 @@ static SDLKey translateKey(uint32_t code) {
       return SDLK_RIGHT;
     case 40:
       return SDLK_DOWN;
+    case 106:
+      return SDLK_KP_MULTIPLY;
+    case 107:
+      return SDLK_KP_PLUS;
+    case 109:
+      return SDLK_KP_MINUS;
+    case 110:
+      return SDLK_KP_PERIOD;
+    case 111:
+      return SDLK_KP_DIVIDE;
+    case 45:
+      return SDLK_INSERT;
+    case 46:
+      return SDLK_DELETE;
+    case 36:
+      return SDLK_HOME;
+    case 35:
+      return SDLK_END;
+    case 33:
+      return SDLK_PAGEUP;
+    case 34:
+      return SDLK_PAGEDOWN;
+    case 189:
+      return SDLK_MINUS;
+    case 187:
+      return SDLK_EQUALS;
+    case 219:
+      return SDLK_LEFTBRACKET;
+    case 221:
+      return SDLK_RIGHTBRACKET;
+    case 186:
+      return SDLK_SEMICOLON;
+    case 222:
+      return SDLK_QUOTE;
+    case 220:
+      return SDLK_BACKSLASH;
+    case 188:
+      return SDLK_COMMA;
+    case 190:
+      return SDLK_PERIOD;
+    case 191:
+      return SDLK_SLASH;
+    case 192:
+      return SDLK_BACKQUOTE;
     default:
       return SDLK_UNKNOWN;
   }
@@ -79,6 +125,8 @@ void NACL_PumpEvents(_THIS) {
       SDL_PrivateMouseButton(SDL_PRESSED, translateButton(event->u.mouse.button), 0, 0);
     } else if (event->type == PP_INPUTEVENT_TYPE_MOUSEUP) {
       SDL_PrivateMouseButton(SDL_RELEASED, translateButton(event->u.mouse.button), 0, 0);
+    } else if (event->type == PP_INPUTEVENT_TYPE_MOUSEMOVE) {
+      SDL_PrivateMouseMotion(0, 0, event->u.mouse.x, event->u.mouse.y);
     } else if (event->type == PP_INPUTEVENT_TYPE_KEYDOWN) {
       keysym.scancode = 0;
       keysym.sym = translateKey(event->u.key.key_code);
@@ -99,5 +147,3 @@ void NACL_PumpEvents(_THIS) {
 void NACL_InitOSKeymap(_THIS) {
   /* do nothing. */
 }
-
-/* end of SDL_naclevents.c ... */
